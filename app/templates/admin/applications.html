@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Applications{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Applications <span class="text-secondary fs-6 fw-normal">{{ records|length }} shown</span></h4>
+</div>
+
+{# ── Filters ── #}
+<form method="get" class="row g-2 mb-4" id="filterForm">
+  <div class="col-md-3">
+    <input name="q" type="text" class="form-control" placeholder="Search callsign, city…"
+           value="{{ q }}" autofocus>
+  </div>
+  <div class="col-6 col-md-2">
+    <select name="status" class="form-select">
+      <option value="">All Statuses</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <select name="band" class="form-select">
+      <option value="">All Bands</option>
+      {% for b in bands %}
+      <option value="{{ b }}" {% if b == band %}selected{% endif %}>{{ band_labels[b] }} MHz</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <select name="region" class="form-select">
+      <option value="">All Regions</option>
+      {% for r in regions %}
+      <option value="{{ r }}" {% if r == region %}selected{% endif %}>{{ r }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <select name="app_type" class="form-select">
+      <option value="">All Types</option>
+      {% for t in app_types %}
+      <option value="{{ t }}" {% if t == app_type %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Filter</button>
+    {% if q or status or band or region or app_type %}
+    <a href="{{ url_for('admin.applications') }}" class="btn btn-outline-secondary">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+{# ── Results ── #}
+{% if records %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle table-sm">
+    <thead>
+      <tr>
+        <th>Record #</th>
+        <th>System</th>
+        <th>Description</th>
+        <th>Type</th>
+        <th>Band</th>
+        <th>Output</th>
+        <th>City</th>
+        <th>Rgn</th>
+        <th>Status</th>
+        <th>Expires</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr class="cursor-pointer" onclick="window.location='{{ url_for('records.detail', subdir=r.subdir) }}'">
+        <td><code>{{ r.subdir }}</code></td>
+        <td>{{ r.system_id or '—' }}</td>
+        <td class="text-truncate" style="max-width:200px">{{ r.subdsc }}</td>
+        <td>{{ r.app_type }}</td>
+        <td>{{ band_labels.get(r.band, r.band) if r.band else '—' }}</td>
+        <td>{{ r.freq_output|format_freq(r.band) if r.freq_output else '—' }}</td>
+        <td>{{ r.loc_city or '—' }}</td>
+        <td>{{ r.loc_region or '—' }}</td>
+        <td>
+          <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'info text-dark' if r.status == 'Audit' else 'secondary' }}">
+            {{ r.status }}
+          </span>
+        </td>
+        <td class="text-nowrap">{{ r.expires_date|date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-secondary">No records match your filters.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Submit filters on dropdown change without needing the button
+document.querySelectorAll('#filterForm select').forEach(el => {
+  el.addEventListener('change', () => document.getElementById('filterForm').submit());
+});
+</script>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% block title %}Edit User — {{ user.callsign }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Edit User — {{ user.callsign }}</h4>
+  <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Users
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <form method="post">
+      <input type="hidden" name="action" value="save_profile">
+
+      <h6 class="text-secondary mb-3">Identity <span class="badge bg-warning text-dark ms-1">Admin</span></h6>
+      <div class="row g-2 mb-4">
+        <div class="col-md-4">
+          <label class="form-label" for="callsign">Callsign</label>
+          <input id="callsign" name="callsign" type="text" class="form-control text-uppercase"
+                 value="{{ user.callsign }}" required maxlength="10">
+          <div class="form-text">Changing this moves all records to the new callsign.</div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center pt-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin"
+                   {% if user.is_admin %}checked{% endif %}>
+            <label class="form-check-label" for="is_admin">Administrator</label>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="license_class">License Class</label>
+          <input id="license_class" name="license_class" type="text" class="form-control"
+                 value="{{ user.license_class or '' }}" placeholder="e.g. Extra">
+        </div>
+      </div>
+
+      <h6 class="text-secondary mb-3">Name</h6>
+      <div class="row g-2 mb-4">
+        <div class="col-md-4">
+          <label class="form-label" for="fname">First</label>
+          <input id="fname" name="fname" type="text" class="form-control"
+                 value="{{ user.fname or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="mname">Middle</label>
+          <input id="mname" name="mname" type="text" class="form-control"
+                 value="{{ user.mname or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="lname">Last</label>
+          <input id="lname" name="lname" type="text" class="form-control"
+                 value="{{ user.lname or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="suffix">Suffix</label>
+          <input id="suffix" name="suffix" type="text" class="form-control"
+                 value="{{ user.suffix or '' }}">
+        </div>
+      </div>
+
+      <h6 class="text-secondary mb-3">Contact</h6>
+      <div class="row g-2 mb-4">
+        <div class="col-md-6">
+          <label class="form-label" for="email">Email</label>
+          <input id="email" name="email" type="email" class="form-control"
+                 value="{{ user.email or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="phone_home">Home Phone</label>
+          <input id="phone_home" name="phone_home" type="tel" class="form-control"
+                 value="{{ user.phone_home or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="phone_work">Work Phone</label>
+          <input id="phone_work" name="phone_work" type="tel" class="form-control"
+                 value="{{ user.phone_work or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="phone_cell">Cell Phone</label>
+          <input id="phone_cell" name="phone_cell" type="tel" class="form-control"
+                 value="{{ user.phone_cell or '' }}">
+        </div>
+      </div>
+
+      <h6 class="text-secondary mb-3">Mailing Address</h6>
+      <div class="row g-2 mb-4">
+        <div class="col-12">
+          <label class="form-label" for="address">Street</label>
+          <input id="address" name="address" type="text" class="form-control"
+                 value="{{ user.address or '' }}">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label" for="city">City</label>
+          <input id="city" name="city" type="text" class="form-control"
+                 value="{{ user.city or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="state">State</label>
+          <input id="state" name="state" type="text" class="form-control text-uppercase"
+                 maxlength="2" value="{{ user.state or '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="zip">ZIP</label>
+          <input id="zip" name="zip" type="text" class="form-control"
+                 value="{{ user.zip or '' }}">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  {# ── Sidebar ── #}
+  <div class="col-lg-4 offset-lg-1">
+
+    <div class="card mb-3" id="fccCard">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="card-title mb-0">FCC License Data</h6>
+          <button id="fccRefreshBtn" class="btn btn-sm btn-outline-secondary" type="button"
+                  title="Refresh from FCC database">
+            <i class="bi bi-arrow-clockwise"></i> Refresh from FCC
+          </button>
+        </div>
+        <div id="fccStatus" class="small text-secondary mb-2">Enter a callsign to look up.</div>
+        <div id="fccConflict" class="d-none">
+          <table class="table table-sm table-borderless mb-2" id="fccTable">
+            <thead>
+              <tr>
+                <th class="text-secondary" style="width:35%">Field</th>
+                <th class="text-secondary">FCC Value</th>
+                <th class="text-secondary">Current</th>
+              </tr>
+            </thead>
+            <tbody id="fccRows"></tbody>
+          </table>
+          <button id="fccApplyBtn" class="btn btn-sm btn-primary">Apply FCC Data</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3 border-danger">
+      <div class="card-body">
+        <h6 class="card-title text-danger">Delete User</h6>
+        <p class="small text-secondary">Permanently removes this account. Blocked if records are attached.</p>
+        <button id="deleteBtn" class="btn btn-danger btn-sm"
+                {% if records %}disabled title="User has records attached"{% endif %}>
+          Delete User
+        </button>
+        <div id="deleteMsg" class="small mt-2"></div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h6 class="card-title">Password Reset</h6>
+        <p class="small text-secondary">Send a reset link to {{ user.email or 'this user' }}.</p>
+        <button id="resetBtn" class="btn btn-outline-warning btn-sm"
+                {% if not user.email %}disabled title="No email on file"{% endif %}>
+          Send Reset Email
+        </button>
+        <div id="resetMsg" class="small mt-2"></div>
+      </div>
+    </div>
+
+    {% if records %}
+    <h6 class="text-secondary mb-2">Records ({{ records|length }})</h6>
+    <table class="table table-hover table-sm align-middle">
+      <tbody>
+        {% for r in records %}
+        <tr class="cursor-pointer" onclick="window.location='{{ url_for('records.detail', subdir=r.subdir) }}'">
+          <td><code class="small">{{ r.subdir }}</code></td>
+          <td class="small text-secondary">{{ r.subdsc }}</td>
+          <td>
+            <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'secondary' }}">
+              {{ r.status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-secondary small">No records.</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('callsign').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
+document.getElementById('state').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
+
+// ── FCC callsign lookup ──────────────────────────────────────
+const FIELD_MAP = [
+  { key: 'fname',      label: 'First Name',   formId: 'fname' },
+  { key: 'mi',         label: 'Middle',        formId: 'mname' },
+  { key: 'lname',      label: 'Last Name',     formId: 'lname' },
+  { key: 'suffix',     label: 'Suffix',        formId: 'suffix' },
+  { key: 'address',    label: 'Address',       formId: 'address' },
+  { key: 'city',       label: 'City',          formId: 'city' },
+  { key: 'state',      label: 'State',         formId: 'state' },
+  { key: 'zip',        label: 'ZIP',           formId: 'zip' },
+  { key: 'license_class', label: 'Lic. Class', formId: 'license_class' },
+];
+
+let fccData = null;
+
+function fccLookup(callsign) {
+  const statusEl = document.getElementById('fccStatus');
+  const conflictEl = document.getElementById('fccConflict');
+  statusEl.textContent = 'Looking up ' + callsign + '…';
+  statusEl.className = 'small text-secondary mb-2';
+  conflictEl.classList.add('d-none');
+  fccData = null;
+
+  fetch('/admin/users/lookup/' + encodeURIComponent(callsign))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.found) {
+        statusEl.textContent = callsign + ' not found in FCC database.';
+        statusEl.className = 'small text-warning mb-2';
+        return;
+      }
+      fccData = data;
+      const statusChar = data.license_status;
+      const statusLabel = statusChar === 'A' ? 'Active'
+                        : statusChar === 'E' ? 'Expired'
+                        : statusChar === 'C' ? 'Cancelled'
+                        : statusChar === 'T' ? 'Terminated'
+                        : (statusChar || '?');
+      const statusClass = statusChar === 'A' ? 'text-success' : 'text-danger';
+      statusEl.innerHTML = `FCC: <strong>${data.license_class || '—'}</strong> &nbsp;<span class="${statusClass}">${statusLabel}</span>`;
+      statusEl.className = 'small mb-2';
+
+      // Build comparison rows
+      const tbody = document.getElementById('fccRows');
+      tbody.innerHTML = '';
+      let hasDiff = false;
+      FIELD_MAP.forEach(f => {
+        const fccVal = (data[f.key] || '').trim();
+        const formEl = f.formId ? document.getElementById(f.formId) : null;
+        const curVal = formEl ? (formEl.value || '').trim() : '';
+        const diff = fccVal && fccVal !== curVal;
+        if (!fccVal) return;   // skip blank FCC fields
+        if (diff) hasDiff = true;
+        const tr = document.createElement('tr');
+        if (diff) tr.style.fontWeight = '600';
+        tr.innerHTML = `<td class="text-secondary">${f.label}</td>
+                        <td>${fccVal}</td>
+                        <td class="${diff ? 'text-warning' : 'text-secondary'}">${curVal || '—'}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      if (hasDiff) {
+        conflictEl.classList.remove('d-none');
+      } else if (tbody.children.length > 0) {
+        statusEl.innerHTML += ' &nbsp;<span class="text-success"><i class="bi bi-check-circle"></i> Form matches FCC</span>';
+      }
+    })
+    .catch(() => {
+      statusEl.textContent = 'Lookup failed.';
+      statusEl.className = 'small text-danger mb-2';
+    });
+}
+
+// Auto-lookup on callsign blur
+document.getElementById('callsign').addEventListener('blur', function() {
+  const cs = this.value.trim().toUpperCase();
+  if (cs.length >= 3) fccLookup(cs);
+});
+
+// Refresh button
+document.getElementById('fccRefreshBtn').addEventListener('click', function() {
+  const cs = document.getElementById('callsign').value.trim().toUpperCase();
+  if (cs.length >= 3) fccLookup(cs);
+});
+
+// Apply FCC data to form
+document.getElementById('fccApplyBtn').addEventListener('click', function() {
+  if (!fccData) return;
+  FIELD_MAP.forEach(f => {
+    const val = (fccData[f.key] || '').trim();
+    if (!val) return;
+    const targetId = f.formId || (f.key === 'license_class' ? 'license_class' : null);
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) el.value = val;
+    }
+  });
+  document.getElementById('fccConflict').classList.add('d-none');
+  const statusEl = document.getElementById('fccStatus');
+  statusEl.innerHTML += ' &nbsp;<span class="text-success"><i class="bi bi-check-circle"></i> Applied</span>';
+});
+
+// Trigger lookup on page load if callsign already set
+(function() {
+  const cs = document.getElementById('callsign').value.trim().toUpperCase();
+  if (cs.length >= 3) fccLookup(cs);
+})();
+
+document.getElementById('deleteBtn')?.addEventListener('click', function() {
+  if (!confirm('Permanently delete {{ user.callsign }}? This cannot be undone.')) return;
+  this.disabled = true;
+  const msg = document.getElementById('deleteMsg');
+  fetch('{{ url_for("admin.delete_user", user_id=user.id) }}', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location = '{{ url_for("admin.users") }}';
+      } else {
+        msg.textContent = data.message;
+        msg.className = 'small mt-2 text-danger';
+        this.disabled = false;
+      }
+    })
+    .catch(() => {
+      msg.textContent = 'Request failed.';
+      msg.className = 'small mt-2 text-danger';
+      this.disabled = false;
+    });
+});
+
+document.getElementById('resetBtn')?.addEventListener('click', function() {
+  this.disabled = true;
+  const msg = document.getElementById('resetMsg');
+  msg.textContent = 'Sending…';
+  fetch('{{ url_for("admin.reset_password", user_id=user.id) }}', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      msg.textContent = data.message;
+      msg.className = 'small mt-2 text-' + (data.success ? 'success' : 'danger');
+      if (!data.success) this.disabled = false;
+    })
+    .catch(() => {
+      msg.textContent = 'Request failed.';
+      msg.className = 'small mt-2 text-danger';
+      this.disabled = false;
+    });
+});
+</script>
+{% endblock %}

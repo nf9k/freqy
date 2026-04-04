@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% macro stat_card(value, label, border='', col='col') %}
+<div class="{{ col }}">
+  <div class="card text-center h-100 {{ border }}">
+    <div class="card-body py-3 px-2">
+      <div class="fs-3 fw-bold">{{ value }}</div>
+      <div class="text-secondary small">{{ label }}</div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<h4 class="mb-4">Admin Dashboard</h4>
+
+{# ── Status summary ── #}
+<h6 class="text-secondary mb-2">By Status</h6>
+<div class="row g-2 mb-4 flex-nowrap">
+  {{ stat_card(stats.total,                                    'Total',        '') }}
+  {{ stat_card(stats.by_status.get('Final', 0),               'Final',        'border-success') }}
+  {{ stat_card(stats.by_status.get('New', 0),                 'New',          'border-warning') }}
+  {{ stat_card(stats.by_status.get('Construction Permit', 0), 'CP',           'border-warning') }}
+  {{ stat_card(stats.by_status.get('Audit', 0),               'Audit',        'border-info') }}
+  {{ stat_card(stats.by_status.get('Cancelled', 0),           'Cancelled',    'border-secondary') }}
+  {{ stat_card(stats.by_status.get('Other', 0),               'Other',        'border-secondary') }}
+</div>
+
+{# ── Type + Band summary ── #}
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <h6 class="text-secondary mb-2">By Type</h6>
+    <div class="row g-2">
+      {% for type, cnt in stats.by_type.items() %}
+      {{ stat_card(cnt, type, col='col-auto') }}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <h6 class="text-secondary mb-2">By Band</h6>
+    <div class="row g-2">
+      {% for band, cnt in stats.by_band.items() %}
+      {{ stat_card(cnt, band_labels.get(band, band) ~ ' MHz', col='col-auto') }}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# ── My records ── #}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">My Records</h5>
+  <a href="{{ url_for('records.new_application') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Application</a>
+</div>
+{% if my_records %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Record #</th>
+        <th>Description</th>
+        <th>Band</th>
+        <th>Status</th>
+        <th>Expires</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in my_records %}
+      <tr class="cursor-pointer" onclick="window.location='{{ url_for('records.detail', subdir=r.subdir) }}'">
+        <td><code>{{ r.subdir }}</code></td>
+        <td>{{ r.subdsc }}</td>
+        <td>{{ band_labels.get(r.band, r.band) }}</td>
+        <td>
+          <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'secondary' }}">
+            {{ r.status }}
+          </span>
+        </td>
+        <td>{{ r.expires_date|date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-secondary">No records associated with your callsign.</p>
+{% endif %}
+{% endblock %}

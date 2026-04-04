@@ -1,0 +1,54 @@
+services:
+  web:
+    image: nf9k/freqy-database:latest
+    container_name: freqy
+    env_file: .env
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    container_name: freqy-db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  fcc-import:
+    image: nf9k/freqy-database:latest
+    container_name: freqy-fcc-import
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python /app/scripts/import_fcc.py && while true; do sleep 86400 && python /app/scripts/import_fcc.py --daily; done"
+    restart: unless-stopped
+
+  expiration-notices:
+    image: nf9k/freqy-database:latest
+    container_name: freqy-expiration-notices
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "while true; do python /app/scripts/send_expiration_notices.py; sleep 86400; done"
+    restart: unless-stopped
+
+volumes:
+  db_data:

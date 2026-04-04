@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register — Freqy</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100" style="background-color:#f0f4f8;">
+<div class="card" style="width: 28rem;">
+  <div class="card-body p-4">
+    <h4 class="card-title text-center mb-1">
+      <i class="bi bi-broadcast-pin"></i> freqy-database
+    </h4>
+    <p class="text-center text-secondary small mb-4">Create an Account</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} py-2 small">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label" for="callsign">Callsign</label>
+        <input id="callsign" name="callsign" type="text" class="form-control text-uppercase"
+               autocomplete="username" autofocus required maxlength="10">
+        <div id="fccBadge" class="form-text"></div>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col">
+          <label class="form-label" for="fname">First Name</label>
+          <input id="fname" name="fname" type="text" class="form-control">
+        </div>
+        <div class="col">
+          <label class="form-label" for="lname">Last Name</label>
+          <input id="lname" name="lname" type="text" class="form-control">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <input id="email" name="email" type="email" class="form-control"
+               autocomplete="email" required>
+        <div class="form-text text-secondary">Used for password recovery and expiration notices.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" name="password" type="password" class="form-control"
+               autocomplete="new-password" required minlength="8">
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="confirm_password">Confirm Password</label>
+        <input id="confirm_password" name="confirm_password" type="password" class="form-control"
+               autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Create Account</button>
+    </form>
+    <div class="text-center mt-3">
+      <a href="{{ url_for('auth.login') }}" class="small text-secondary">Already have an account? Log in</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const callsignEl = document.getElementById('callsign');
+callsignEl.addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
+
+callsignEl.addEventListener('blur', function() {
+  const cs = this.value.trim().toUpperCase();
+  const badge = document.getElementById('fccBadge');
+  if (cs.length < 3) return;
+  badge.textContent = 'Looking up…';
+  fetch('/callsign-lookup/' + encodeURIComponent(cs))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.found) { badge.innerHTML = '<span class="text-warning">Not found in FCC database.</span>'; return; }
+      const statusLabel = data.license_status === 'A' ? '<span class="text-success">Active</span>'
+                        : '<span class="text-danger">' + (data.license_status || '?') + '</span>';
+      badge.innerHTML = (data.license_class || '') + ' &nbsp;' + statusLabel;
+      // Pre-fill name and address if fields are empty
+      const fills = {fname: data.fname, lname: data.lname, address: data.address, city: data.city, state: data.state, zip: data.zip};
+      Object.entries(fills).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && !el.value && val) el.value = val;
+      });
+    })
+    .catch(() => { badge.textContent = ''; });
+});
+</script>
+</body>
+</html>

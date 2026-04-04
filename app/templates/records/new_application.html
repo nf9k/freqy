@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% block title %}New Application{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">New Coordination Application</h4>
+  <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
+
+<form method="post">
+
+<ul class="nav nav-tabs mb-3" id="newAppTabs">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-system">System</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-freq">Frequency</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-site">Site & Antenna</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-trustee">Trustee</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-notes">Notes</a></li>
+</ul>
+
+<div class="tab-content">
+
+  {# ── System tab ── #}
+  <div class="tab-pane fade show active" id="tab-system">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">System ID <span class="text-danger">*</span></label>
+        <input id="system_id" name="system_id" type="text" class="form-control text-uppercase" required>
+        <div id="systemIdFcc" class="form-text text-secondary">Callsign of the system (may differ from your account callsign)</div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">App Type <span class="text-danger">*</span></label>
+        <select name="app_type" class="form-select" required>
+          <option value="">— Select —</option>
+          {% for t in app_types %}
+          <option value="{{ t }}">{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Description</label>
+        <input name="subdsc" type="text" class="form-control" placeholder="e.g. W9XYZ/R 146.940 Chicago">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Access / Willbe</label>
+        <select name="willbe" class="form-select">
+          <option value="">—</option>
+          {% for w in willbe_options %}<option value="{{ w }}">{{ w }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Secondary Contact Callsign</label>
+        <input name="secondary_contact_callsign" type="text" class="form-control text-uppercase"
+               placeholder="Optional">
+      </div>
+      <div class="col-md-4">
+        <div class="form-check mt-4">
+          <input class="form-check-input" type="checkbox" name="eq_ready" id="eq_ready">
+          <label class="form-check-label text-secondary" for="eq_ready">Equipment Ready</label>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Eq Ready Date</label>
+        <input name="eq_ready_date" type="text" class="form-control" placeholder="MM/DD/YYYY">
+      </div>
+
+      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">Sponsor</h6></div>
+      <div class="col-md-6">
+        <label class="form-label text-secondary small">System Sponsor</label>
+        <input name="system_sponsor" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Abbreviation</label>
+        <input name="sponsor_abbrev" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Sponsor URL</label>
+        <input name="sponsor_url" type="text" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  {# ── Frequency tab ── #}
+  <div class="tab-pane fade" id="tab-freq">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Band <span class="text-danger">*</span></label>
+        <select name="band" class="form-select" required>
+          <option value="">— Select —</option>
+          {% for b in bands %}
+          <option value="{{ b }}">{{ band_labels[b] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Output Freq (MHz) <span class="text-danger">*</span></label>
+        <input name="freq_output" type="text" class="form-control" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Input Freq (MHz)</label>
+        <input name="freq_input" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Bandwidth</label>
+        <select name="bandwidth" class="form-select">
+          <option value="">—</option>
+          <option value="12.5kHz">12.5kHz</option>
+          <option value="20kHz">20kHz</option>
+          <option value="25kHz">25kHz</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Emission Designator</label>
+        <input name="emission_des" type="text" class="form-control" list="emission-des-list">
+        <datalist id="emission-des-list">
+          <option value="11K2F3E">11K2F3E — NFM voice (12.5 kHz)</option>
+          <option value="16K0F3E">16K0F3E — FM voice (20 kHz)</option>
+          <option value="20K0F3E">20K0F3E — FM voice (25 kHz)</option>
+          <option value="8K50F3E">8K50F3E — FM voice (8.5 kHz)</option>
+          <option value="7K60FXE">7K60FXE — FM voice/digital</option>
+          <option value="12K5F7W">12K5F7W — Mixed digital (DMR/C4FM)</option>
+          <option value="12K5F1D">12K5F1D — Digital data (12.5 kHz)</option>
+          <option value="8K10F1D">8K10F1D — Narrowband digital</option>
+          <option value="8K10F1E">8K10F1E — P25</option>
+          <option value="6K25F7W">6K25F7W — NXDN</option>
+          <option value="2K80J3E">2K80J3E — SSB</option>
+          <option value="6K00A3E">6K00A3E — AM</option>
+        </datalist>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Emission Designator 2</label>
+        <input name="emission_des2" type="text" class="form-control" list="emission-des-list">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">TX Power (W)</label>
+        <input id="tx_power" name="tx_power" type="text" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">ERP (W) <span class="text-secondary fw-normal">calculated</span></label>
+        <input id="erp_display" type="text" class="form-control bg-body-secondary" readonly placeholder="—">
+        <div class="form-text text-secondary">TX power + antenna gain − feedline loss</div>
+      </div>
+
+      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">Tone / Digital Access</h6></div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">TX CTCSS</label>
+        <select name="tx_pl" class="form-select">
+          <option value="">—</option>
+          {% for t in ctcss_tones %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">RX CTCSS</label>
+        <select name="rx_pl" class="form-select">
+          <option value="">—</option>
+          {% for t in ctcss_tones %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">TX DCS</label>
+        <select name="tx_dcs" class="form-select">
+          <option value="">—</option>
+          {% for c in dcs_codes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">RX DCS</label>
+        <select name="rx_dcs" class="form-select">
+          <option value="">—</option>
+          {% for c in dcs_codes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">DMR Color Code</label>
+        <select name="dmr_cc" class="form-select">
+          <option value="">—</option>
+          {% for cc in dmr_color_codes %}<option value="{{ cc }}">{{ cc }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">P25 NAC</label>
+        <input name="p25_nac" type="text" class="form-control" list="nac-list">
+        <datalist id="nac-list">
+          {% for n in p25_nacs %}<option value="{{ n }}">{% endfor %}
+        </datalist>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">NXDN RAN</label>
+        <input name="nxdn_ran" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Fusion DSQ</label>
+        <input name="fusion_dsq" type="text" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  {# ── Site & Antenna tab ── #}
+  <div class="tab-pane fade" id="tab-site">
+    <div class="row g-3">
+      <div class="col-12"><h6 class="text-secondary">TX Site Location</h6></div>
+      <div class="col-md-6">
+        <label class="form-label text-secondary small">Building</label>
+        <input name="loc_building" type="text" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label text-secondary small">Street</label>
+        <input name="loc_street" type="text" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">City</label>
+        <input name="loc_city" type="text" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">County</label>
+        <input name="loc_county" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">State</label>
+        <input name="loc_state" type="text" class="form-control text-uppercase" maxlength="2">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">Region</label>
+        <select name="loc_region" class="form-select">
+          <option value="">—</option>
+          {% for rg in regions %}
+          <option value="{{ rg }}">{{ rg }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Latitude</label>
+        <input id="loc_lat" name="loc_lat" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Longitude</label>
+        <input id="loc_lng" name="loc_lng" type="text" class="form-control">
+      </div>
+      <div class="col-12">
+        <div id="tx-map" style="height:300px; border-radius:6px;"></div>
+        <div class="form-text text-secondary">Click map to set coordinates. Drag marker to adjust.</div>
+      </div>
+
+      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">TX Antenna</h6></div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Type</label>
+        <input name="ant_type" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">Gain (dBd)</label>
+        <input id="ant_gain" name="ant_gain" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">HAAT (ft)</label>
+        <input name="ant_haat" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">AMSL (ft)</label>
+        <input name="ant_amsl" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">HAGL (ft)</label>
+        <input name="ant_ahag" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Polarization</label>
+        <input name="ant_polarization" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Feedline Loss (dB)</label>
+        <input id="fdl_loss" name="fdl_loss" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Favored Direction</label>
+        <input name="ant_favor" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Beamwidth</label>
+        <input name="ant_beamwidth" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Front-to-Back</label>
+        <input name="ant_frontback" type="text" class="form-control">
+      </div>
+      <div class="col-md-9">
+        <label class="form-label text-secondary small">Antenna Comment</label>
+        <input name="ant_comment" type="text" class="form-control">
+      </div>
+
+      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">RX Site (leave blank if same as TX)</h6></div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">RX Latitude</label>
+        <input id="rx_lat" name="rx_lat" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">RX Longitude</label>
+        <input id="rx_lng" name="rx_lng" type="text" class="form-control">
+      </div>
+
+      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">RX Antenna</h6></div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Type</label>
+        <input name="ant_type_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">Gain (dBd)</label>
+        <input name="ant_gain_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label text-secondary small">HAGL (ft)</label>
+        <input name="ant_ahag_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Polarization</label>
+        <input name="ant_polarization_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Feedline Loss (dB)</label>
+        <input name="fdl_loss_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Favored Direction</label>
+        <input name="ant_favor_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Beamwidth</label>
+        <input name="ant_beamwidth_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Front-to-Back</label>
+        <input name="ant_frontback_rx" type="text" class="form-control">
+      </div>
+      <div class="col-md-9">
+        <label class="form-label text-secondary small">Antenna Comment</label>
+        <input name="ant_comment_rx" type="text" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  {# ── Trustee tab ── #}
+  <div class="tab-pane fade" id="tab-trustee">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label text-secondary small">Trustee Name</label>
+        <input name="trustee_name" type="text" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Trustee Callsign</label>
+        <input name="trustee_callsign" type="text" class="form-control text-uppercase">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-secondary small">Trustee Email</label>
+        <input name="trustee_email" type="email" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Day Phone</label>
+        <input name="trustee_phone_day" type="text" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Evening Phone</label>
+        <input name="trustee_phone_eve" type="text" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-secondary small">Cell Phone</label>
+        <input name="trustee_phone_cell" type="text" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  {# ── Notes tab ── #}
+  <div class="tab-pane fade" id="tab-notes">
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label text-secondary small">Comments</label>
+        <textarea name="comments" class="form-control font-monospace" rows="8"
+                  placeholder="Any additional information about this coordination request…"></textarea>
+      </div>
+    </div>
+  </div>
+
+</div>{# end tab-content #}
+
+<div class="mt-4 d-flex gap-2">
+  <button type="submit" class="btn btn-primary">Submit Application</button>
+  <a href="javascript:history.back()" class="btn btn-outline-secondary">Cancel</a>
+</div>
+
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const DEFAULT_CENTER = [39.5, -98.35];
+const DEFAULT_ZOOM   = 4;
+const SITE_ZOOM      = 13;
+
+function parseCoord(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? null : v;
+}
+
+function fmt(n) { return n.toFixed(6); }
+
+function initMap(mapId, latId, lngId) {
+  const latEl = document.getElementById(latId);
+  const lngEl = document.getElementById(lngId);
+  const initLat = parseCoord(latId);
+  const initLng = parseCoord(lngId);
+  const hasCoords = initLat !== null && initLng !== null;
+
+  const map = L.map(mapId).setView(
+    hasCoords ? [initLat, initLng] : DEFAULT_CENTER,
+    hasCoords ? SITE_ZOOM : DEFAULT_ZOOM
+  );
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
+
+  let marker = null;
+
+  function placeMarker(lat, lng) {
+    if (marker) {
+      marker.setLatLng([lat, lng]);
+    } else {
+      marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+      marker.on('dragend', function() {
+        const pos = marker.getLatLng();
+        latEl.value = fmt(pos.lat);
+        lngEl.value = fmt(pos.lng);
+      });
+    }
+  }
+
+  if (hasCoords) placeMarker(initLat, initLng);
+
+  map.on('click', function(e) {
+    latEl.value = fmt(e.latlng.lat);
+    lngEl.value = fmt(e.latlng.lng);
+    placeMarker(e.latlng.lat, e.latlng.lng);
+  });
+
+  function onInputChange() {
+    const lat = parseCoord(latId);
+    const lng = parseCoord(lngId);
+    if (lat !== null && lng !== null) {
+      placeMarker(lat, lng);
+      map.setView([lat, lng], map.getZoom() < SITE_ZOOM ? SITE_ZOOM : map.getZoom());
+    }
+  }
+
+  latEl.addEventListener('change', onInputChange);
+  lngEl.addEventListener('change', onInputChange);
+
+  return map;
+}
+
+let txMapInit = false;
+document.querySelector('[href="#tab-site"]').addEventListener('shown.bs.tab', function() {
+  if (!txMapInit) { initMap('tx-map', 'loc_lat', 'loc_lng'); txMapInit = true; }
+});
+
+// ── Input frequency calculator ───────────────────────────────
+function calcOffset(band, output) {
+  switch(band) {
+    case '29':  return 0.100;
+    case '50':  return 1.000;
+    case '144': return output < 147.000 ? 0.600 : -0.600;
+    case '222': return -1.600;
+    case '440': return output < 445.000 ? 5.000 : -5.000;
+    default:    return null;
+  }
+}
+
+function updateInputFreq() {
+  const band   = document.querySelector('[name="band"]').value;
+  const outVal = parseFloat(document.querySelector('[name="freq_output"]').value);
+  const inEl   = document.querySelector('[name="freq_input"]');
+  if (!band || isNaN(outVal)) return;
+  const offset = calcOffset(band, outVal);
+  if (offset === null) return;
+  const places = band === 'GHZ' ? 4 : 3;
+  inEl.value = (outVal + offset).toFixed(places);
+}
+
+document.querySelector('[name="band"]').addEventListener('change', updateInputFreq);
+document.querySelector('[name="freq_output"]').addEventListener('change', updateInputFreq);
+
+// ── ERP calculator ───────────────────────────────────────────
+function updateERP() {
+  const pW   = parseFloat(document.getElementById('tx_power').value);
+  const gDbd = parseFloat(document.getElementById('ant_gain').value);
+  const lDb  = parseFloat(document.getElementById('fdl_loss').value) || 0;
+  const erp  = document.getElementById('erp_display');
+  if (isNaN(pW) || isNaN(gDbd)) { erp.value = ''; return; }
+  const erpW = pW * Math.pow(10, (gDbd - lDb) / 10);
+  erp.value  = erpW >= 1000
+    ? (erpW / 1000).toFixed(2) + ' kW'
+    : erpW.toFixed(1) + ' W';
+}
+
+['tx_power','ant_gain','fdl_loss'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', updateERP);
+});
+
+// ── System ID / FCC lookup ────────────────────────────────────
+document.getElementById('system_id').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
+document.getElementById('system_id').addEventListener('blur', function() {
+  const cs = this.value.trim().toUpperCase();
+  const hint = document.getElementById('systemIdFcc');
+  if (cs.length < 3) return;
+  hint.textContent = 'Looking up…';
+  fetch('/callsign-lookup/' + encodeURIComponent(cs))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.found) { hint.innerHTML = '<span class="text-warning">Not found in FCC database.</span>'; return; }
+      const name = [data.fname, data.lname].filter(Boolean).join(' ');
+      const sl = data.license_status === 'A' ? '<span class="text-success">Active</span>'
+               : '<span class="text-danger">' + (data.license_status || '?') + '</span>';
+      hint.innerHTML = (name ? name + ' &nbsp;·&nbsp; ' : '') + (data.license_class || '') + ' &nbsp;' + sl;
+    })
+    .catch(() => { hint.textContent = 'Callsign of the system (may differ from your account callsign)'; });
+});
+</script>
+{% endblock %}

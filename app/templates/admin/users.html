@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Users{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Users <span class="text-secondary fs-6 fw-normal">{{ users|length }} accounts</span></h4>
+  <a href="{{ url_for('admin.new_user') }}" class="btn btn-sm btn-primary">
+    <i class="bi bi-person-plus"></i> Add User
+  </a>
+</div>
+
+<div class="mb-3">
+  <input type="text" id="search" class="form-control" placeholder="Search callsign, name, or email…" autofocus>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle" id="userTable">
+    <thead>
+      <tr>
+        <th>Callsign</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th class="text-center">Records</th>
+        <th class="text-center">Admin</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr class="cursor-pointer" onclick="window.location='{{ url_for('admin.user_detail', user_id=u.id) }}'">
+        <td><strong>{{ u.callsign }}</strong></td>
+        <td>{{ [u.fname, u.lname]|select|join(' ') or '—' }}</td>
+        <td>{{ u.email or '—' }}</td>
+        <td class="text-center">{{ u.record_count }}</td>
+        <td class="text-center">
+          {% if u.is_admin %}<i class="bi bi-shield-check text-success"></i>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#userTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

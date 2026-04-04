@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="mb-0">My Profile — {{ user.callsign }}</h4>
+      <div class="d-flex gap-2 align-items-center">
+        <span id="fccStatus" class="small text-secondary"></span>
+        <button id="fccRefreshBtn" type="button" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-clockwise"></i> Refresh from FCC
+        </button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+      </div>
+    </div>
+
+    <div id="fccConflict" class="card mb-3 border-warning d-none">
+      <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="small fw-bold">FCC record differs from your profile</span>
+          <button id="fccApplyBtn" type="button" class="btn btn-sm btn-warning">Apply FCC Data</button>
+        </div>
+        <table class="table table-sm table-borderless mb-0">
+          <thead><tr>
+            <th class="text-secondary" style="width:30%">Field</th>
+            <th class="text-secondary">FCC Value</th>
+            <th class="text-secondary">Current</th>
+          </tr></thead>
+          <tbody id="fccRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <form method="post">
+
+      <h6 class="text-secondary mb-3">Name</h6>
+      <div class="row g-2 mb-4">
+        <div class="col-md-4">
+          <label class="form-label" for="fname">First</label>
+          <input id="fname" name="fname" type="text" class="form-control"
+                 value="{{ user.fname or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="mname">Middle</label>
+          <input id="mname" name="mname" type="text" class="form-control"
+                 value="{{ user.mname or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="lname">Last</label>
+          <input id="lname" name="lname" type="text" class="form-control"
+                 value="{{ user.lname or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="suffix">Suffix</label>
+          <input id="suffix" name="suffix" type="text" class="form-control"
+                 value="{{ user.suffix or '' }}" placeholder="Jr, Sr…">
+        </div>
+      </div>
+
+      <h6 class="text-secondary mb-3">Contact</h6>
+      <div class="row g-2 mb-4">
+        <div class="col-md-6">
+          <label class="form-label" for="email">Email</label>
+          <input id="email" name="email" type="email" class="form-control"
+                 value="{{ user.email or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="phone_home">Home Phone</label>
+          <input id="phone_home" name="phone_home" type="tel" class="form-control"
+                 value="{{ user.phone_home or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="phone_work">Work Phone</label>
+          <input id="phone_work" name="phone_work" type="tel" class="form-control"
+                 value="{{ user.phone_work or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="phone_cell">Cell Phone</label>
+          <input id="phone_cell" name="phone_cell" type="tel" class="form-control"
+                 value="{{ user.phone_cell or '' }}">
+        </div>
+      </div>
+
+      <h6 class="text-secondary mb-3">Mailing Address</h6>
+      <div class="row g-2 mb-4">
+        <div class="col-12">
+          <label class="form-label" for="address">Street</label>
+          <input id="address" name="address" type="text" class="form-control"
+                 value="{{ user.address or '' }}">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label" for="city">City</label>
+          <input id="city" name="city" type="text" class="form-control"
+                 value="{{ user.city or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="state">State</label>
+          <input id="state" name="state" type="text" class="form-control text-uppercase"
+                 maxlength="2" value="{{ user.state or '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="zip">ZIP</label>
+          <input id="zip" name="zip" type="text" class="form-control"
+                 value="{{ user.zip or '' }}">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('state').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
+
+const FIELD_MAP = [
+  { key: 'fname',   label: 'First Name', formId: 'fname' },
+  { key: 'mi',      label: 'Middle',     formId: 'mname' },
+  { key: 'lname',   label: 'Last Name',  formId: 'lname' },
+  { key: 'suffix',  label: 'Suffix',     formId: 'suffix' },
+  { key: 'address', label: 'Address',    formId: 'address' },
+  { key: 'city',    label: 'City',       formId: 'city' },
+  { key: 'state',   label: 'State',      formId: 'state' },
+  { key: 'zip',     label: 'ZIP',        formId: 'zip' },
+];
+
+let fccData = null;
+
+function fccLookup() {
+  const cs = '{{ user.callsign }}';
+  const statusEl  = document.getElementById('fccStatus');
+  const conflictEl = document.getElementById('fccConflict');
+  statusEl.textContent = 'Looking up FCC…';
+  conflictEl.classList.add('d-none');
+  fccData = null;
+
+  fetch('/callsign-lookup/' + encodeURIComponent(cs))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.found) { statusEl.textContent = 'Not found in FCC database.'; return; }
+      fccData = data;
+      const sl = data.license_status === 'A' ? 'Active' : (data.license_status || '?');
+      const sc = data.license_status === 'A' ? 'text-success' : 'text-danger';
+      statusEl.innerHTML = `FCC: <strong>${data.license_class || '—'}</strong> &nbsp;<span class="${sc}">${sl}</span>`;
+
+      const tbody = document.getElementById('fccRows');
+      tbody.innerHTML = '';
+      let hasDiff = false;
+      FIELD_MAP.forEach(f => {
+        const fccVal = (data[f.key] || '').trim();
+        const el = document.getElementById(f.formId);
+        const curVal = el ? (el.value || '').trim() : '';
+        if (!fccVal) return;
+        const diff = fccVal !== curVal;
+        if (diff) hasDiff = true;
+        const tr = document.createElement('tr');
+        if (diff) tr.style.fontWeight = '600';
+        tr.innerHTML = `<td class="text-secondary">${f.label}</td><td>${fccVal}</td><td class="${diff ? 'text-warning' : 'text-secondary'}">${curVal || '—'}</td>`;
+        tbody.appendChild(tr);
+      });
+      if (hasDiff) conflictEl.classList.remove('d-none');
+    })
+    .catch(() => { statusEl.textContent = ''; });
+}
+
+document.getElementById('fccRefreshBtn').addEventListener('click', fccLookup);
+document.getElementById('fccApplyBtn').addEventListener('click', function() {
+  if (!fccData) return;
+  FIELD_MAP.forEach(f => {
+    const val = (fccData[f.key] || '').trim();
+    const el = document.getElementById(f.formId);
+    if (el && val) el.value = val;
+  });
+  document.getElementById('fccConflict').classList.add('d-none');
+  document.getElementById('fccStatus').innerHTML += ' &nbsp;<span class="text-success"><i class="bi bi-check-circle"></i> Applied</span>';
+});
+
+// Auto-lookup on page load
+fccLookup();
+</script>
+{% endblock %}
