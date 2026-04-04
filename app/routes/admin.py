@@ -389,9 +389,9 @@ def user_detail(user_id):
     cur.execute('''
         SELECT subdir, subdsc, band, status, expires_date
         FROM coordination_records
-        WHERE user_id = %s OR secondary_contact_id = %s
+        WHERE user_id = %s
         ORDER BY mod_date DESC
-    ''', (user_id, user_id))
+    ''', (user_id,))
     records = cur.fetchall()
 
     cur.close()
