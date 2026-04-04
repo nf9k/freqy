@@ -31,8 +31,12 @@
         </div>
         <div class="col-md-4">
           <label class="form-label" for="license_class">License Class</label>
-          <input id="license_class" name="license_class" type="text" class="form-control"
-                 value="{{ user.license_class or '' }}" placeholder="e.g. Extra">
+          <select id="license_class" name="license_class" class="form-select">
+            <option value=""></option>
+            {% for cls in ['Technician', 'General', 'Extra', 'Advanced', 'Novice'] %}
+            <option value="{{ cls }}" {% if user.license_class == cls %}selected{% endif %}>{{ cls }}</option>
+            {% endfor %}
+          </select>
         </div>
       </div>
 
