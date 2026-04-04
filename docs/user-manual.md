@@ -60,7 +60,7 @@ Enter your callsign and password on the login page. Sessions last 24 hours.
 
 ## Dashboard
 
-After logging in you are taken to your dashboard, which shows all coordination records associated with your account — either as the primary owner or secondary contact.
+After logging in you are taken to your dashboard, which shows all coordination records where your account is the primary owner.
 
 **Columns shown:**
 
@@ -95,7 +95,7 @@ The record detail page shows all information for a coordination in a tabbed layo
 
 ### Secondary Contact
 
-If you are the record owner, you can set a secondary contact callsign directly on the record detail page. The secondary contact can view the record on their dashboard and edit it.
+If you are the record owner, you can set a secondary contact callsign directly on the record detail page. The secondary contact can view the record by navigating to it directly.
 
 To set or change: enter the callsign in the **Secondary Contact** field and click **Update**.
 
@@ -129,7 +129,7 @@ The form is organized into tabs:
 - **Bandwidth** — 12.5 kHz, 20 kHz, or 25 kHz
 - **Emission Designator** — FCC emission designator; common values are available in the dropdown
 - **TX Power** — transmitter power in watts
-- **ERP** — calculated automatically from TX power, antenna gain, and feedline loss
+- **ERP** — effective radiated power in watts
 - **Tone / Digital Access** — CTCSS (TX/RX), DCS (TX/RX), DMR Color Code, P25 NAC, NXDN RAN, Fusion DSQ
 
 ### Site & Antenna Tab
