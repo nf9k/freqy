@@ -147,7 +147,7 @@ docker compose up -d
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GPLv3 — see [LICENSE](LICENSE).
 
 ---
 
