@@ -105,10 +105,10 @@ CREATE TABLE IF NOT EXISTS coordination_records (
     loc_city            VARCHAR(100),
     loc_county          VARCHAR(100),
     loc_state           CHAR(2),
-    loc_region          VARCHAR(10),
+    loc_region          VARCHAR(30),
 
     -- TX antenna
-    ant_type            VARCHAR(10),
+    ant_type            VARCHAR(50),
     ant_gain            DECIMAL(5,2),                -- dBd
     ant_haat            SMALLINT,                    -- ft
     ant_amsl            SMALLINT,                    -- ft
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS coordination_records (
     rx_lng              DECIMAL(9,6),
 
     -- RX antenna
-    ant_type_rx         VARCHAR(10),
+    ant_type_rx         VARCHAR(50),
     ant_gain_rx         DECIMAL(5,2),
     ant_ahag_rx         SMALLINT,
     ant_favor_rx        VARCHAR(50),
