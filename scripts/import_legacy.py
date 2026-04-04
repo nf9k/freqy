@@ -105,7 +105,10 @@ def parse_decimal(val):
     if v is None:
         return None
     try:
+        import math
         f = float(v)
+        if math.isnan(f):
+            return None
         return f if f != 0.0 else None
     except ValueError:
         return None
