@@ -151,4 +151,4 @@ GPLv3 — see [LICENSE](LICENSE).
 
 ---
 
-*freqy-database by NF9K — not affiliated with any employer.*
+*freqy-database by NF9K*
