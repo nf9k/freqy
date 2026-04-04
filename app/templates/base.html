@@ -27,14 +27,15 @@
           <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
         </li>
         {% if current_user.is_admin %}
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Admin</a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{{ url_for('admin.applications') }}">Applications</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">Users</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{{ url_for('admin.review_changes') }}">Review Changes</a></li>
-          </ul>
+        <li class="nav-item"><span class="vr mx-2 opacity-25 d-none d-lg-block align-self-center"></span></li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin.applications') }}">Applications</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin.users') }}">Users</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin.review_changes') }}">Review Changes</a>
         </li>
         {% endif %}
       </ul>
