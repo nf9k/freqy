@@ -155,6 +155,10 @@ docker compose up -d
 
 ---
 
+## Contributors
+
+See [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 ## License
 
 GPLv3 — see [LICENSE](LICENSE).
