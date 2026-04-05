@@ -276,11 +276,11 @@ def new_user():
                 recipients=[email],
                 body=(
                     f"Hello {fname or callsign},\n\n"
-                    f"An administrator has created a freqy-database account for you.\n\n"
+                    f"An administrator has created a freqy account for you.\n\n"
                     f"Callsign: {callsign}\n\n"
                     f"Set your password here:\n{reset_url}\n\n"
                     f"This link expires in 24 hours.\n\n"
-                    f"73,\nfreqy-database by NF9K\n"
+                    f"73,\nfreqy by NF9K\n"
                 ),
             )
             try:
@@ -520,7 +520,7 @@ def reset_password(user_id):
             f"Hello {user['callsign']},\n\n"
             f"An administrator has initiated a password reset for your account.\n\n"
             f"Click the link below to set a new password:\n{reset_url}\n\n"
-            f"This link expires in 24 hours.\n\n73,\nfreqy-database by NF9K\n"
+            f"This link expires in 24 hours.\n\n73,\nfreqy by NF9K\n"
         ),
     )
     try:

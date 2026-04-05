@@ -63,7 +63,7 @@ def smtp_cfg():
         'port':     int(os.getenv('SMTP_PORT', 587)),
         'user':     os.getenv('SMTP_USER', ''),
         'password': os.getenv('SMTP_PASSWORD', ''),
-        'from_name':  os.getenv('SMTP_FROM_NAME', 'freqy-database'),
+        'from_name':  os.getenv('SMTP_FROM_NAME', 'freqy'),
         'from_email': os.getenv('SMTP_FROM_EMAIL', 'noreply@example.com'),
     }
 
@@ -142,7 +142,7 @@ def run(dry_run=False):
                 f"Please log in to review and renew your coordination:\n"
                 f"{record_url}\n\n"
                 f"If you have questions, contact the coordination team.\n\n"
-                f"73,\nfreqy-database by NF9K\n"
+                f"73,\nfreqy by NF9K\n"
             )
             subject = f"Freqy — Coordination {rec['subdir']} expires in {days} day{'s' if days != 1 else ''}"
 

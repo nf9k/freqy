@@ -17,7 +17,7 @@ class Config:
     MAIL_USERNAME       = os.getenv('SMTP_USER', '')
     MAIL_PASSWORD       = os.getenv('SMTP_PASSWORD', '')
     MAIL_DEFAULT_SENDER = (
-        os.getenv('SMTP_FROM_NAME', 'freqy-database'),
+        os.getenv('SMTP_FROM_NAME', 'freqy'),
         os.getenv('SMTP_FROM_EMAIL', 'noreply@example.com'),
     )
 

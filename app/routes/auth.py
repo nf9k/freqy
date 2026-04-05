@@ -216,7 +216,7 @@ def _send_reset_email(to_email, callsign, token):
             f"Click the link below to reset your Freqy password:\n"
             f"{reset_url}\n\n"
             f"This link expires in 24 hours. If you did not request this, ignore this email.\n\n"
-            f"73,\nfreqy-database by NF9K\n"
+            f"73,\nfreqy by NF9K\n"
         ),
     )
     try:

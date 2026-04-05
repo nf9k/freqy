@@ -1,6 +1,6 @@
 services:
   web:
-    image: nf9k/freqy-database:latest
+    image: nf9k/freqy:latest
     container_name: freqy
     env_file: .env
     ports:
@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
 
   fcc-import:
-    image: nf9k/freqy-database:latest
+    image: nf9k/freqy:latest
     container_name: freqy-fcc-import
     env_file: .env
     depends_on:
@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
 
   expiration-notices:
-    image: nf9k/freqy-database:latest
+    image: nf9k/freqy:latest
     container_name: freqy-expiration-notices
     env_file: .env
     depends_on:

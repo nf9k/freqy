@@ -371,7 +371,7 @@ def _notify_admins_new(subdir, description, callsign):
             f"Description: {description}\n"
             f"Submitted by: {callsign}\n\n"
             f"Review it here:\n{record_url}\n\n"
-            f"73,\nfreqy-database by NF9K\n"
+            f"73,\nfreqy by NF9K\n"
         ),
     )
     try:
