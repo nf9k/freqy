@@ -1,6 +1,6 @@
-# freqy-database — User Manual
+# freqy — User Manual
 
-**Amateur Radio Frequency Coordination Database**
+**Amateur Radio Frequency Coordination**
 
 ---
 
@@ -27,7 +27,7 @@
 
 ## Overview
 
-freqy-database is a web-based frequency coordination management system for amateur radio operators. It replaces legacy flat-file coordination systems with a modern, searchable database accessible from any browser.
+freqy is a web-based frequency coordination management system for amateur radio operators. It replaces legacy flat-file coordination systems with a modern, searchable database accessible from any browser.
 
 **Key capabilities:**
 
@@ -271,15 +271,15 @@ FCC data is available in three places:
 
 | Status | Description |
 |--------|-------------|
-| **New** | Application received, pending review |
-| **Construction Permit** | Approved for construction; not yet final |
-| **Final** | Coordination complete and active |
-| **On Hold** | Pending additional information |
-| **Audit** | Under review |
-| **Expired** | Coordination has lapsed |
-| **Cancelled** | Coordination withdrawn or revoked |
-| **Placeholder** | Reserved record; not active |
-| **Other** | Miscellaneous status |
+| **New** | Application recently submitted to the system. |
+| **Construction Permit** | Trustee has 180 days from grant date to get the repeater in place and in operation. |
+| **Final** | Coordination has been granted and is in good standing with the IRC. |
+| **On Hold** | Application is on hold pending NOPC process or other administrative action. |
+| **Audit** | Record is under administrative review. |
+| **Expired** | Two years have passed since last update by trustee. Coordination is no longer in good standing with the IRC. Expired coordinations may be subject to frequency pair forfeiture. |
+| **Cancelled** | Coordination surrendered or cancelled due to other administrative action and is therefore invalid. |
+| **Placeholder** | Coordinator use only. Intended to communicate in-flight coordination to other coordinators. |
+| **Other** | Contact the coordination team to find out what's going on. |
 
 ---
 
@@ -314,5 +314,5 @@ Coordinates are stored in decimal degrees. Latitude is positive north. Longitude
 
 ---
 
-*freqy-database — open source frequency coordination for amateur radio*
+*freqy — open source frequency coordination for amateur radio*
 *https://github.com/nf9k/freqy-database*
