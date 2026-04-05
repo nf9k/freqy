@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import status_badge %}
 {% block title %}{{ r.subdir }} — {{ r.subdsc }}{% endblock %}
 {% block content %}
 
@@ -9,9 +10,7 @@
       <code class="text-secondary fs-6">{{ r.subdir }}</code>
       {{ r.subdsc }}
     </h4>
-    <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'secondary' }} me-1">
-      {{ r.status }}
-    </span>
+    {{ status_badge(r.status) }}
     <span class="badge bg-dark border border-secondary">{{ r.app_type }}</span>
   </div>
   <div class="d-flex gap-2">

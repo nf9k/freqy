@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import status_badge %}
 {% block title %}Applications{% endblock %}
 {% block content %}
 
@@ -82,9 +83,7 @@
         <td>{{ r.loc_city or '—' }}</td>
         <td>{{ r.loc_region or '—' }}</td>
         <td>
-          <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'info text-dark' if r.status == 'Audit' else 'secondary' }}">
-            {{ r.status }}
-          </span>
+          {{ status_badge(r.status) }}
         </td>
         <td class="text-nowrap">{{ r.expires_date|date }}</td>
       </tr>

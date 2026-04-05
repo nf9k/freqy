@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import status_badge %}
 {% block title %}Edit User — {{ user.callsign }}{% endblock %}
 {% block content %}
 
@@ -180,11 +181,7 @@
         <tr class="cursor-pointer" onclick="window.location='{{ url_for('records.detail', subdir=r.subdir) }}'">
           <td><code class="small">{{ r.subdir }}</code></td>
           <td class="small text-secondary">{{ r.subdsc }}</td>
-          <td>
-            <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'secondary' }}">
-              {{ r.status }}
-            </span>
-          </td>
+          <td>{{ status_badge(r.status) }}</td>
         </tr>
         {% endfor %}
       </tbody>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import status_badge %}
 {% block title %}Dashboard{% endblock %}
 
 {% macro stat_card(value, label, border='', col='col') %}
@@ -71,9 +72,7 @@
         <td>{{ r.subdsc }}</td>
         <td>{{ band_labels.get(r.band, r.band) }}</td>
         <td>
-          <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning text-dark' if r.status in ('New', 'Construction Permit') else 'secondary' }}">
-            {{ r.status }}
-          </span>
+          {{ status_badge(r.status) }}
         </td>
         <td>{{ r.expires_date|date }}</td>
       </tr>

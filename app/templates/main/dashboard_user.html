@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import status_badge %}
 {% block title %}My Records{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -25,9 +26,7 @@
         <td>{{ r.subdsc }}</td>
         <td>{{ r.band }}</td>
         <td>
-          <span class="badge bg-{{ 'success' if r.status == 'Final' else 'warning' if r.status in ('New', 'Construction Permit') else 'secondary' }}">
-            {{ r.status }}
-          </span>
+          {{ status_badge(r.status) }}
         </td>
         <td>{{ r.expires_date|date }}</td>
       </tr>

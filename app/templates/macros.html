@@ -1,0 +1,21 @@
+{% macro status_badge(status) %}
+{% set descriptions = {
+  'New':                'Application recently submitted to the system.',
+  'Construction Permit':'Trustee has 180 days from grant date to get the repeater in place and in operation.',
+  'Final':              'Coordination has been granted and is in good standing with the IRC.',
+  'Cancelled':          'Coordination surrendered or cancelled due to other administrative action and is therefore invalid.',
+  'Audit':              'Record is under administrative review.',
+  'On Hold':            'Application is on hold pending NOPC process or other administrative action.',
+  'Expired':            'Two years have passed since last update by trustee. Coordination is no longer in good standing with the IRC. Expired coordinations may be subject to frequency pair forfeiture.',
+  'Placeholder':        'Coordinator use only. Intended to communicate in-flight coordination to other coordinators.',
+  'Other':              "If you find yourself here, we didn&#39;t anticipate this scenario. Leave us a comment to find out what&#39;s going on."
+} %}
+{% set color = 'success' if status == 'Final'
+          else 'warning text-dark' if status in ('New', 'Construction Permit')
+          else 'info text-dark' if status == 'Audit'
+          else 'danger' if status in ('Cancelled', 'Expired')
+          else 'secondary' %}
+<span class="badge bg-{{ color }}"
+      data-bs-toggle="tooltip"
+      data-bs-title="{{ descriptions.get(status, '') }}">{{ status }}</span>
+{% endmacro %}
