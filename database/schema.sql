@@ -22,10 +22,13 @@ CREATE TABLE IF NOT EXISTS users (
     phone_home      VARCHAR(20),
     phone_work      VARCHAR(20),
     phone_cell      VARCHAR(20),
-    is_admin        TINYINT(1)   NOT NULL DEFAULT 0,
-    license_class   VARCHAR(20),                -- FCC license class (Extra, General, etc.)
-    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    is_admin         TINYINT(1)   NOT NULL DEFAULT 0,
+    totp_secret      VARCHAR(32),
+    totp_enabled     TINYINT(1)   NOT NULL DEFAULT 0,
+    webauthn_enabled TINYINT(1)   NOT NULL DEFAULT 0,
+    license_class    VARCHAR(20),               -- FCC license class (Extra, General, etc.)
+    created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------
@@ -149,6 +152,33 @@ CREATE TABLE IF NOT EXISTS coordination_records (
     FOREIGN KEY (user_id)                REFERENCES users(id),
     FOREIGN KEY (secondary_contact_id)  REFERENCES users(id),
     FOREIGN KEY (parent_record_id)       REFERENCES coordination_records(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -------------------------------------------------------
+-- TOTP backup codes (one row per code)
+-- -------------------------------------------------------
+CREATE TABLE IF NOT EXISTS totp_backup_codes (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT          NOT NULL,
+    code_hash   VARCHAR(255) NOT NULL,
+    used        TINYINT(1)   NOT NULL DEFAULT 0,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -------------------------------------------------------
+-- WebAuthn / FIDO2 credentials (one row per registered key)
+-- -------------------------------------------------------
+CREATE TABLE IF NOT EXISTS webauthn_credentials (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT          NOT NULL,
+    credential_id VARCHAR(512) NOT NULL,
+    public_key    TEXT         NOT NULL,
+    sign_count    INT          NOT NULL DEFAULT 0,
+    name          VARCHAR(100) NOT NULL DEFAULT 'Security Key',
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_credential_id (credential_id(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------

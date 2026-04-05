@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, current_app
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for, current_app
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_mail import Message
 
@@ -131,7 +131,7 @@ def login():
         conn = get_db()
         cur  = dict_cursor(conn)
         cur.execute(
-            'SELECT id, callsign, email, password_hash, is_admin FROM users WHERE callsign = %s',
+            'SELECT id, callsign, email, password_hash, is_admin, totp_enabled, webauthn_enabled FROM users WHERE callsign = %s',
             (callsign,)
         )
         row = cur.fetchone()
@@ -139,6 +139,12 @@ def login():
         conn.close()
 
         if row and check_password(password, row['password_hash']):
+            # If 2FA is enabled, stage the user and redirect to challenge
+            if row.get('totp_enabled') or row.get('webauthn_enabled'):
+                session['pending_2fa_user_id'] = row['id']
+                session['pending_2fa_next'] = request.args.get('next') or url_for('main.dashboard')
+                return redirect(url_for('twofa.challenge'))
+
             user = User(row['id'], row['callsign'], row['email'], row['is_admin'])
             login_user(user, remember=True)
             return redirect(request.args.get('next') or url_for('main.dashboard'))

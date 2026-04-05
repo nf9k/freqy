@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-change-me')
@@ -25,3 +26,7 @@ class Config:
     ADMIN_NOTIFY_EMAILS = [
         e.strip() for e in os.getenv('ADMIN_NOTIFY_EMAILS', '').split(',') if e.strip()
     ]
+
+    _parsed_url     = urllib.parse.urlparse(os.getenv('APP_URL', 'http://localhost:5000'))
+    WEBAUTHN_RP_ID  = _parsed_url.hostname or 'localhost'
+    WEBAUTHN_ORIGIN = os.getenv('APP_URL', 'http://localhost:5000')

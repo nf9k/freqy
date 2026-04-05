@@ -72,11 +72,13 @@ def create_app():
     from .routes.records import bp as records_bp
     from .routes.profile import bp as profile_bp
     from .routes.admin import bp as admin_bp
+    from .routes.twofa import bp as twofa_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(records_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(twofa_bp)
 
     return app

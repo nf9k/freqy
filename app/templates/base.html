@@ -52,6 +52,8 @@
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="{{ url_for('profile.edit') }}">My Profile</a></li>
             <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('twofa.security') }}">
+              <i class="bi bi-shield-lock"></i> Security &amp; 2FA</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
           </ul>
