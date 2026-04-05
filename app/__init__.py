@@ -56,6 +56,11 @@ def create_app():
         places = 4 if band == 'GHZ' else 3
         return f'{value:.{places}f}'
 
+    import os
+    @app.context_processor
+    def inject_version():
+        return {'app_version': os.environ.get('APP_VERSION', 'dev')}
+
     # Extensions
     from .auth import login_manager
     login_manager.init_app(app)
