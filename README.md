@@ -145,6 +145,8 @@ All configuration is via `.env`. See `.env.example` for all options.
 | `ADMIN_NOTIFY_EMAILS` | Comma-separated addresses for new application alerts |
 | `FREQ_CO_CHANNEL_MILES` | Co-channel minimum separation in miles (default: 120) |
 | `FREQ_ADJ_RULES` | Adjacent channel rules as JSON (see `.env.example` for format) |
+| `EXPORT_TITLE` | Title line included in all DB exports; `{date}` is replaced with today's date |
+| `HCAPTCHA_SITE_KEY` / `HCAPTCHA_SECRET_KEY` | hCaptcha keys for login, register, and password reset; omit to disable |
 
 ---
 

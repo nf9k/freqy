@@ -348,10 +348,12 @@ Results include only active records (status: Final, Construction Permit, On Hold
 
 | Format | Description |
 |--------|-------------|
-| CSV | All fields, spreadsheet compatible |
-| JSON | All fields, machine readable |
-| XML | All fields, structured data exchange |
-| PDF | Key fields in a printable landscape table |
+| CSV | All fields, spreadsheet compatible; title on first line as a `#` comment |
+| JSON | All fields, machine readable; wrapped as `{"title": "...", "records": [...]}` |
+| XML | All fields, structured data exchange; title as root element attribute |
+| PDF | Key fields in a printable landscape table; title centered at top of each page |
+
+The title line is configurable via the `EXPORT_TITLE` environment variable. Use `{date}` as a placeholder for the current date. Default: `Frequency Coordination Database Export as of {date}`.
 
 ---
 
