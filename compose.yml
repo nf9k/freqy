@@ -36,7 +36,7 @@ services:
       db:
         condition: service_healthy
     command: >
-      sh -c "python /app/scripts/import_fcc.py && while true; do sleep 86400 && python /app/scripts/import_fcc.py --daily; done"
+      sh -c "until python3 -c 'import socket; socket.gethostbyname(\"data.fcc.gov\")' 2>/dev/null; do echo 'Waiting for DNS...'; sleep 5; done && python /app/scripts/import_fcc.py && while true; do sleep 86400 && python /app/scripts/import_fcc.py --daily; done"
     restart: unless-stopped
 
   expiration-notices:
