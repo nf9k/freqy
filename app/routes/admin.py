@@ -615,12 +615,14 @@ def db_export_download(fmt):
     cur.close()
     conn.close()
 
-    # Serialize date/decimal types to strings
+    # Serialize date/decimal/other non-primitive types to strings
     def _clean(v):
-        if isinstance(v, (date, datetime)):
-            return str(v)
         if v is None:
             return ''
+        if isinstance(v, (date, datetime)):
+            return str(v)
+        if hasattr(v, '__float__'):   # Decimal
+            return float(v)
         return v
 
     records = [{k: _clean(v) for k, v in row.items()} for row in rows]
