@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% block title %}Frequency Check{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8">
+
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <h4 class="mb-0"><i class="bi bi-broadcast"></i> Frequency Coordination Check</h4>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} py-2 small">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" id="freqCheckForm">
+
+      {# ── Coordinate input ── #}
+      <div class="card mb-3">
+        <div class="card-header py-2">
+          <div class="d-flex align-items-center gap-3">
+            <strong class="small">Proposed Site Coordinates</strong>
+            <div class="btn-group btn-group-sm" role="group">
+              <input type="radio" class="btn-check" name="coord_mode" id="mode_decimal" value="decimal"
+                     {% if (form_data.get('coord_mode') or 'decimal') == 'decimal' %}checked{% endif %}>
+              <label class="btn btn-outline-secondary" for="mode_decimal">Decimal</label>
+
+              <input type="radio" class="btn-check" name="coord_mode" id="mode_dms" value="dms"
+                     {% if form_data.get('coord_mode') == 'dms' %}checked{% endif %}>
+              <label class="btn btn-outline-secondary" for="mode_dms">DMS</label>
+
+              <input type="radio" class="btn-check" name="coord_mode" id="mode_map" value="map"
+                     {% if form_data.get('coord_mode') == 'map' %}checked{% endif %}>
+              <label class="btn btn-outline-secondary" for="mode_map">Map</label>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pb-2">
+
+          {# Decimal #}
+          <div id="panel_decimal" class="coord-panel">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label small" for="lat_dec">Latitude (decimal °N)</label>
+                <input id="lat_dec" type="text" class="form-control" placeholder="39.768403"
+                       value="{{ form_data.get('lat') if form_data.get('coord_mode', 'decimal') == 'decimal' else '' }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small" for="lon_dec">Longitude (decimal °, negative W)</label>
+                <input id="lon_dec" type="text" class="form-control" placeholder="-86.158068"
+                       value="{{ form_data.get('lon') if form_data.get('coord_mode', 'decimal') == 'decimal' else '' }}">
+              </div>
+            </div>
+          </div>
+
+          {# DMS #}
+          <div id="panel_dms" class="coord-panel d-none">
+            <div class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label class="form-label small">Latitude</label>
+                <div class="input-group input-group-sm">
+                  <input name="lat_d" type="number" class="form-control" style="width:4rem" placeholder="39"
+                         value="{{ form_data.get('lat_d', '') }}">
+                  <span class="input-group-text">°</span>
+                  <input name="lat_m" type="number" class="form-control" style="width:4rem" placeholder="46"
+                         value="{{ form_data.get('lat_m', '') }}">
+                  <span class="input-group-text">′</span>
+                  <input name="lat_s" type="number" step="0.01" class="form-control" style="width:5rem" placeholder="06.25"
+                         value="{{ form_data.get('lat_s', '') }}">
+                  <span class="input-group-text">″</span>
+                  <select name="lat_dir" class="form-select" style="width:4rem">
+                    <option value="N" {% if form_data.get('lat_dir','N')=='N' %}selected{% endif %}>N</option>
+                    <option value="S" {% if form_data.get('lat_dir')=='S' %}selected{% endif %}>S</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-auto">
+                <label class="form-label small">Longitude</label>
+                <div class="input-group input-group-sm">
+                  <input name="lon_d" type="number" class="form-control" style="width:4rem" placeholder="86"
+                         value="{{ form_data.get('lon_d', '') }}">
+                  <span class="input-group-text">°</span>
+                  <input name="lon_m" type="number" class="form-control" style="width:4rem" placeholder="09"
+                         value="{{ form_data.get('lon_m', '') }}">
+                  <span class="input-group-text">′</span>
+                  <input name="lon_s" type="number" step="0.01" class="form-control" style="width:5rem" placeholder="29.05"
+                         value="{{ form_data.get('lon_s', '') }}">
+                  <span class="input-group-text">″</span>
+                  <select name="lon_dir" class="form-select" style="width:4rem">
+                    <option value="W" {% if form_data.get('lon_dir','W')=='W' %}selected{% endif %}>W</option>
+                    <option value="E" {% if form_data.get('lon_dir')=='E' %}selected{% endif %}>E</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {# Map #}
+          <div id="panel_map" class="coord-panel d-none">
+            <div id="freq-check-map" style="height:320px; border-radius:6px;" class="mb-2"></div>
+            <div class="form-text text-secondary mb-2">Click map to set coordinates. Drag marker to adjust.</div>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label small">Latitude</label>
+                <input id="map_lat_display" type="text" class="form-control form-control-sm" readonly placeholder="click map">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Longitude</label>
+                <input id="map_lon_display" type="text" class="form-control form-control-sm" readonly placeholder="click map">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {# Hidden lat/lon submitted with form — always populated regardless of mode #}
+      <input type="hidden" name="lat" id="hidden_lat" value="{{ form_data.get('lat', '') }}">
+      <input type="hidden" name="lon" id="hidden_lon" value="{{ form_data.get('lon', '') }}">
+
+      {# ── Frequency ── #}
+      <div class="card mb-3">
+        <div class="card-body py-3">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label small" for="freq">Output Frequency (MHz)</label>
+              <input id="freq" name="freq" type="text" class="form-control"
+                     placeholder="146.940" value="{{ form_data.get('freq', '') }}" required>
+              <div class="form-text" id="bandDetect"></div>
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Check Frequency
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+    {# ── Results ── #}
+    {% if results is not none %}
+    <hr>
+    <h5 class="mb-3">
+      Results for <strong>{{ '%.4f' % results.freq }} MHz</strong>
+      <span class="text-secondary small ms-2">
+        {{ results.lat | round(5) }}°, {{ results.lon | round(5) }}°
+        &nbsp;·&nbsp; Band: {{ results.band_key }} MHz
+      </span>
+    </h5>
+
+    {# Co-channel #}
+    <div class="card mb-3">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <strong>Co-channel &nbsp;<span class="badge bg-secondary">{{ results.co_channel | length }}</span></strong>
+        <span class="text-secondary small">120-mile minimum separation</span>
+      </div>
+      {% if results.co_channel %}
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Record</th>
+              <th>System</th>
+              <th>Description</th>
+              <th>City, ST</th>
+              <th>Status</th>
+              <th class="text-end">Distance</th>
+              <th class="text-center">Rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in results.co_channel %}
+            <tr class="{{ 'table-danger' if not r.passes else '' }}">
+              <td><a href="{{ url_for('records.detail', subdir=r.subdir) }}" target="_blank">{{ r.subdir }}</a></td>
+              <td>{{ r.system_id or r.callsign }}</td>
+              <td class="text-secondary small">{{ r.subdsc or '—' }}</td>
+              <td class="text-secondary small">{{ r.loc_city or '—' }}{% if r.loc_state %}, {{ r.loc_state }}{% endif %}</td>
+              <td><span class="badge bg-secondary">{{ r.status }}</span></td>
+              <td class="text-end fw-bold {% if not r.passes %}text-danger{% else %}text-success{% endif %}">
+                {{ r.distance }} mi
+              </td>
+              <td class="text-center">
+                {% if r.passes %}
+                <i class="bi bi-check-circle-fill text-success" title="Meets {{ r.required_miles }}-mile minimum"></i>
+                {% else %}
+                <i class="bi bi-x-circle-fill text-danger" title="Fails {{ r.required_miles }}-mile minimum ({{ r.distance }} mi)"></i>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-secondary small">No co-channel records within database.</div>
+      {% endif %}
+    </div>
+
+    {# Adjacent channel #}
+    <div class="card mb-3">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <strong>Adjacent Channel &nbsp;<span class="badge bg-secondary">{{ results.adjacent | length }}</span></strong>
+        <span class="text-secondary small">Per-band offset rules</span>
+      </div>
+      {% if results.adjacent %}
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Record</th>
+              <th>System</th>
+              <th>Output Freq</th>
+              <th>Offset</th>
+              <th>City, ST</th>
+              <th>Status</th>
+              <th class="text-end">Distance</th>
+              <th class="text-center">Rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in results.adjacent %}
+            <tr class="{{ 'table-danger' if not r.passes else '' }}">
+              <td><a href="{{ url_for('records.detail', subdir=r.subdir) }}" target="_blank">{{ r.subdir }}</a></td>
+              <td>{{ r.system_id or r.callsign }}</td>
+              <td class="font-monospace">{{ '%.4f' % r.freq_output }}</td>
+              <td class="text-secondary small">±{{ r.offset_khz }} kHz</td>
+              <td class="text-secondary small">{{ r.loc_city or '—' }}{% if r.loc_state %}, {{ r.loc_state }}{% endif %}</td>
+              <td><span class="badge bg-secondary">{{ r.status }}</span></td>
+              <td class="text-end fw-bold {% if not r.passes %}text-danger{% else %}text-success{% endif %}">
+                {{ r.distance }} mi
+              </td>
+              <td class="text-center">
+                {% if r.passes %}
+                <i class="bi bi-check-circle-fill text-success" title="Meets {{ r.required_miles }}-mile minimum"></i>
+                {% else %}
+                <i class="bi bi-x-circle-fill text-danger" title="Fails {{ r.required_miles }}-mile minimum ({{ r.distance }} mi)"></i>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-secondary small">No adjacent channel records within database.</div>
+      {% endif %}
+    </div>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── Coordinate mode toggle ────────────────────────────────────────
+const panels = { decimal: 'panel_decimal', dms: 'panel_dms', map: 'panel_map' };
+const hiddenLat = document.getElementById('hidden_lat');
+const hiddenLon = document.getElementById('hidden_lon');
+
+function showPanel(mode) {
+  Object.values(panels).forEach(id => document.getElementById(id).classList.add('d-none'));
+  document.getElementById(panels[mode]).classList.remove('d-none');
+  if (mode === 'map' && !window._freqMapInit) initFreqMap();
+}
+
+document.querySelectorAll('input[name="coord_mode"]').forEach(el => {
+  el.addEventListener('change', () => showPanel(el.value));
+});
+showPanel(document.querySelector('input[name="coord_mode"]:checked').value);
+
+// Sync decimal inputs to hidden fields on submit
+document.getElementById('freqCheckForm').addEventListener('submit', function() {
+  const mode = document.querySelector('input[name="coord_mode"]:checked').value;
+  if (mode === 'decimal') {
+    hiddenLat.value = document.getElementById('lat_dec').value;
+    hiddenLon.value = document.getElementById('lon_dec').value;
+  }
+  // dms and map modes write to hidden fields directly
+});
+
+// ── Map picker ───────────────────────────────────────────────────
+window._freqMapInit = false;
+function initFreqMap() {
+  window._freqMapInit = true;
+  const map = L.map('freq-check-map').setView([39.77, -86.16], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18,
+  }).addTo(map);
+
+  let marker = null;
+  function fmt(v) { return v.toFixed(6); }
+
+  function place(lat, lng) {
+    if (marker) marker.setLatLng([lat, lng]);
+    else {
+      marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+      marker.on('dragend', function() {
+        const p = marker.getLatLng();
+        setCoords(p.lat, p.lng);
+      });
+    }
+  }
+
+  function setCoords(lat, lng) {
+    document.getElementById('map_lat_display').value = fmt(lat);
+    document.getElementById('map_lon_display').value = fmt(lng);
+    hiddenLat.value = fmt(lat);
+    hiddenLon.value = fmt(lng);
+    place(lat, lng);
+  }
+
+  map.on('click', function(e) { setCoords(e.latlng.lat, e.latlng.lng); });
+
+  {% if results %}
+  setCoords({{ results.lat }}, {{ results.lon }});
+  map.setView([{{ results.lat }}, {{ results.lon }}], 8);
+  {% endif %}
+}
+
+// ── Band detection hint ──────────────────────────────────────────
+const BANDS = [
+  [50, 54, '6m (52 MHz rules)'],
+  [144, 148, '2m (144 MHz rules)'],
+  [222, 225, '222 MHz'],
+  [420, 450, '440 MHz (70cm)'],
+  [900, 930, '902 MHz (33cm)'],
+  [1200, 1300, '1296 MHz (23cm)'],
+];
+document.getElementById('freq').addEventListener('input', function() {
+  const f = parseFloat(this.value);
+  const el = document.getElementById('bandDetect');
+  if (isNaN(f)) { el.textContent = ''; return; }
+  const match = BANDS.find(([lo, hi]) => f >= lo && f < hi);
+  el.textContent = match ? match[2] : 'Not a coordinated band';
+  el.className = 'form-text ' + (match ? 'text-success' : 'text-danger');
+});
+</script>
+{% endblock %}

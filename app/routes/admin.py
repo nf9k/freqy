@@ -1,3 +1,5 @@
+import math
+
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, current_app
 from flask_login import current_user
 from flask_mail import Message
@@ -529,3 +531,150 @@ def reset_password(user_id):
     except Exception as e:
         current_app.logger.error('Failed to send reset email: %s', e)
         return jsonify({'success': False, 'message': 'Failed to send email.'}), 500
+
+
+# ── Frequency coordination check ─────────────────────────────────
+
+# Co-channel minimum separation (miles) — all bands
+_CO_CHANNEL_MILES = 120
+
+# Adjacent channel rules per band key: list of (max_offset_khz, min_sep_miles)
+# Each entry means: if offset <= max_offset_khz, min separation is min_sep_miles.
+# List must be sorted ascending by max_offset_khz.
+_ADJ_RULES = {
+    '50':   [(20, 20)],
+    '144':  [(10, 40), (15, 30), (20, 25), (30, 20)],
+    '222':  [(20, 25), (40, 5)],
+    '440':  [(25, 5),  (50, 1)],
+    '902':  [(25, 5),  (50, 1)],
+    '1296': [(25, 5),  (50, 1)],
+}
+
+
+def _haversine_miles(lat1, lon1, lat2, lon2):
+    R = 3958.8
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a  = math.sin(dp/2)**2 + math.cos(p1) * math.cos(p2) * math.sin(dl/2)**2
+    return 2 * R * math.asin(math.sqrt(a))
+
+
+def _rules_key(freq_mhz):
+    """Return the separation-rules band key for a given output frequency."""
+    if   50.0  <= freq_mhz <  54.0:  return '50'
+    elif 144.0 <= freq_mhz < 148.0:  return '144'
+    elif 222.0 <= freq_mhz < 225.0:  return '222'
+    elif 420.0 <= freq_mhz < 450.0:  return '440'
+    elif 900.0 <= freq_mhz < 930.0:  return '902'
+    elif 1200.0 <= freq_mhz < 1300.0: return '1296'
+    return None
+
+
+def _adj_rule(rules, offset_khz):
+    """Return (max_offset_khz, min_sep_miles) for offset, or None if out of range."""
+    for max_off, min_sep in rules:
+        if offset_khz <= max_off + 0.05:   # float tolerance
+            return max_off, min_sep
+    return None
+
+
+@bp.route('/frequency-check', methods=['GET', 'POST'])
+@admin_required
+def frequency_check():
+    results = None
+    form_data = {}
+
+    if request.method == 'POST':
+        coord_mode = request.form.get('coord_mode', 'decimal')
+        try:
+            if coord_mode == 'dms':
+                def _dms(d, m, s, direction, neg_dirs):
+                    v = abs(float(d)) + float(m)/60 + float(s)/3600
+                    return -v if direction in neg_dirs else v
+                lat = _dms(
+                    request.form.get('lat_d', 0), request.form.get('lat_m', 0),
+                    request.form.get('lat_s', 0), request.form.get('lat_dir', 'N'), ('S',)
+                )
+                lon = _dms(
+                    request.form.get('lon_d', 0), request.form.get('lon_m', 0),
+                    request.form.get('lon_s', 0), request.form.get('lon_dir', 'W'), ('W',)
+                )
+            else:
+                lat = float(request.form.get('lat', ''))
+                lon = float(request.form.get('lon', ''))
+
+            freq = float(request.form.get('freq', ''))
+        except (ValueError, TypeError):
+            flash('Invalid coordinates or frequency.', 'danger')
+            return render_template('admin/frequency_check.html', results=None, form_data=request.form)
+
+        form_data = {**request.form, 'lat': lat, 'lon': lon, 'freq': freq}
+
+        key = _rules_key(freq)
+        if key is None:
+            flash('Frequency is not in a coordinated band (6m, 2m, 222, 440, 902, 1296).', 'warning')
+            return render_template('admin/frequency_check.html', results=None, form_data=form_data)
+
+        adj_rules  = _ADJ_RULES[key]
+        max_adj_mhz = adj_rules[-1][0] / 1000.0   # widest adjacent window in MHz
+
+        conn = get_db()
+        cur  = dict_cursor(conn)
+        cur.execute('''
+            SELECT r.id, r.subdir, r.system_id, r.subdsc, r.freq_output,
+                   r.band, r.status, r.loc_lat, r.loc_lng, r.loc_city, r.loc_state,
+                   u.callsign
+            FROM   coordination_records r
+            JOIN   users u ON u.id = r.user_id
+            WHERE  r.freq_output IS NOT NULL
+              AND  r.loc_lat  IS NOT NULL
+              AND  r.loc_lng  IS NOT NULL
+              AND  ABS(r.freq_output - %s) <= %s
+              AND  r.status IN ('Final', 'Construction Permit', 'On Hold', 'Audit')
+        ''', (freq, max_adj_mhz + 0.0001))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        co_channel = []
+        adjacent   = []
+
+        for row in rows:
+            dist       = _haversine_miles(lat, lon, float(row['loc_lat']), float(row['loc_lng']))
+            offset_khz = round(abs(float(row['freq_output']) - freq) * 1000, 3)
+
+            if offset_khz < 0.1:                        # co-channel
+                passes = dist >= _CO_CHANNEL_MILES
+                co_channel.append({
+                    **row,
+                    'distance':       round(dist, 1),
+                    'offset_khz':     0,
+                    'required_miles': _CO_CHANNEL_MILES,
+                    'passes':         passes,
+                })
+            else:
+                rule = _adj_rule(adj_rules, offset_khz)
+                if rule:
+                    _, min_sep = rule
+                    adjacent.append({
+                        **row,
+                        'distance':       round(dist, 1),
+                        'offset_khz':     offset_khz,
+                        'required_miles': min_sep,
+                        'passes':         dist >= min_sep,
+                    })
+
+        co_channel.sort(key=lambda r: r['distance'])
+        adjacent.sort(key=lambda r: r['distance'])
+
+        results = {
+            'co_channel': co_channel,
+            'adjacent':   adjacent,
+            'freq':        freq,
+            'band_key':    key,
+            'lat':         lat,
+            'lon':         lon,
+        }
+
+    return render_template('admin/frequency_check.html', results=results, form_data=form_data)
