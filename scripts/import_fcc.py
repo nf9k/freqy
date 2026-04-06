@@ -149,13 +149,17 @@ def run(daily=False):
 
     print(f'  HD records: {len(hd):,}  EN records: {len(en):,}  AM records: {len(am):,}', flush=True)
 
-    # Build merged rows: EN is the authoritative source; join HD status + AM class
-    rows = []
+    # Build merged rows: EN is the authoritative source; join HD status + AM class.
+    # Multiple USIs can share a callsign (history + active). Deduplicate by callsign,
+    # preferring Active ('A') over any other status so cancelled/expired records don't
+    # overwrite the current holder.
+    best = {}   # callsign -> row tuple
     for usi, entity in en.items():
-        status = hd.get(usi, '')
+        status = hd.get(usi, '') or None
         cls    = am.get(usi)
-        rows.append((
-            entity['callsign'],
+        call   = entity['callsign']
+        row = (
+            call,
             entity['fname'],
             entity['mi'],
             entity['lname'],
@@ -165,8 +169,12 @@ def run(daily=False):
             entity['state'],
             entity['zip'],
             cls,
-            status or None,
-        ))
+            status,
+        )
+        existing = best.get(call)
+        if existing is None or status == 'A' or (existing[10] != 'A' and status is not None):
+            best[call] = row
+    rows = list(best.values())
 
     print(f'  Upserting {len(rows):,} rows into fcc_licenses…', flush=True)
     conn = get_conn()
@@ -195,7 +203,7 @@ def run(daily=False):
             ''', batch)
         else:
             cur.executemany('''
-                INSERT INTO fcc_licenses
+                INSERT IGNORE INTO fcc_licenses
                     (callsign, fname, mi, lname, suffix, address, city, state, zip,
                      license_class, license_status)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
