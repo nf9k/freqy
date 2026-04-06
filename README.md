@@ -143,7 +143,7 @@ The app listens on port 5000. Place it behind nginx, Traefik, Caddy, or your pro
 Always build and push both a versioned tag and `latest`:
 
 ```bash
-docker build -t nf9k/freqy:X.XX -t nf9k/freqy:latest --build-arg VERSION=X.XX .
+docker build --no-cache -t nf9k/freqy:X.XX -t nf9k/freqy:latest --build-arg VERSION=X.XX .
 docker push nf9k/freqy:X.XX
 docker push nf9k/freqy:latest
 git tag vX.XX && git push --tags
