@@ -15,7 +15,7 @@
   </a>
 </div>
 
-<form method="post">
+<form method="post" action="{{ url_for('admin.edit_record', subdir=r.subdir) }}">
 
 <ul class="nav nav-tabs mb-3" id="editTabs">
   <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-status">Status</a></li>
