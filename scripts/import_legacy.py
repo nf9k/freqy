@@ -32,6 +32,32 @@ NONE_VALUES = {'NONE-ON-FILE', 'N/A', '', None}
 
 EXPIRATION_RE = re.compile(r'^\d{8}$')   # YYYYMMDD
 
+STATE_ABBREV = {
+    'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR',
+    'california': 'CA', 'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE',
+    'florida': 'FL', 'georgia': 'GA', 'hawaii': 'HI', 'idaho': 'ID',
+    'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA', 'kansas': 'KS',
+    'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+    'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS',
+    'missouri': 'MO', 'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV',
+    'new hampshire': 'NH', 'new jersey': 'NJ', 'new mexico': 'NM', 'new york': 'NY',
+    'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH', 'oklahoma': 'OK',
+    'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+    'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT',
+    'vermont': 'VT', 'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV',
+    'wisconsin': 'WI', 'wyoming': 'WY', 'district of columbia': 'DC',
+}
+
+
+def parse_state(val):
+    """Return 2-char state abbreviation or None."""
+    v = clean(val)
+    if v is None:
+        return None
+    if len(v) <= 2:
+        return v.upper()
+    return STATE_ABBREV.get(v.lower())
+
 # ---------------------------------------------------------------
 # DB helpers
 # ---------------------------------------------------------------
@@ -190,7 +216,7 @@ def import_user(conn, p, dry_run):
         'suffix':      clean(p.get('SUFFIX')),
         'address':     clean(p.get('STADR')),
         'city':        clean(p.get('CITYX')),
-        'state':       clean(p.get('STATE')),
+        'state':       parse_state(p.get('STATE')),
         'zip':         clean(p.get('ZIPCO')),
         'phone_home':  clean(p.get('HPHON')),
         'phone_work':  clean(p.get('WPHON')),
@@ -299,7 +325,7 @@ def import_record(conn, user_id, p, dry_run):
         'loc_street':       clean(p.get('LOC_STREET')),
         'loc_city':         clean(p.get('LOC_CITY')),
         'loc_county':       clean(p.get('LOC_COUNTY')),
-        'loc_state':        clean(p.get('LOC_STATE')),
+        'loc_state':        parse_state(p.get('LOC_STATE')),
         'loc_region':       clean(p.get('LOC_REGION')),
         'ant_type':         clean(p.get('ANT_TYPE')),
         'ant_gain':         parse_decimal(p.get('ANT_GAIN')),
