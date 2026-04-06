@@ -12,6 +12,7 @@ The IRCINC directory should contain one subdirectory per callsign, each with:
 """
 
 import argparse
+import math
 import os
 import re
 import sys
@@ -105,7 +106,6 @@ def parse_decimal(val):
     if v is None:
         return None
     try:
-        import math
         f = float(v)
         if math.isnan(f):
             return None
@@ -330,6 +330,10 @@ def import_record(conn, user_id, p, dry_run):
         'trustee_phone_cell': clean(p.get('SYSTEM_TRUSTEE_CPH')),
         'trustee_email':    clean(p.get('SYSTEM_TRUSTEE_EML')),
     }
+
+    # Sanitize: convert any float NaN that slipped through to None
+    row = {k: (None if isinstance(v, float) and math.isnan(v) else v)
+           for k, v in row.items()}
 
     if dry_run:
         return subdir
