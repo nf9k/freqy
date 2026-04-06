@@ -36,9 +36,9 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 
 **Coordination/NOPC Check** — co-channel and adjacent-channel conflict detection with configurable separation rules
 
-| Decimal Input | DMS Input | Map View |
-|---------------|-----------|----------|
-| ![NOPC Decimal](docs/screenshots/nopc-dec.png) | ![NOPC DMS](docs/screenshots/nopc-dms.png) | ![NOPC Map](docs/screenshots/nopc-map.png) |
+| Decimal Input | DMS Input | Map View | Results |
+|---------------|-----------|----------|---------|
+| ![NOPC Decimal](docs/screenshots/nopc-dec.png) | ![NOPC DMS](docs/screenshots/nopc-dms.png) | ![NOPC Map](docs/screenshots/nopc-map.png) | ![NOPC Results](docs/screenshots/nopc-results.png) |
 
 **Two-Factor Authentication** — TOTP, hardware security keys, and backup codes
 
