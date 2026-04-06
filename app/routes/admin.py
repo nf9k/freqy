@@ -1,6 +1,11 @@
+import csv
+import io
+import json
 import math
+import xml.etree.ElementTree as ET
+from datetime import date, datetime
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, current_app
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, current_app, Response
 from flask_login import current_user
 from flask_mail import Message
 
@@ -571,6 +576,146 @@ def _adj_rule(rules, offset_khz):
         if offset_khz <= max_off + 0.05:   # float tolerance
             return max_off, min_sep
     return None
+
+
+@bp.route('/export')
+@admin_required
+def db_export():
+    return render_template('admin/db_export.html')
+
+
+@bp.route('/export/<fmt>')
+@admin_required
+def db_export_download(fmt):
+    if fmt not in ('csv', 'json', 'xml', 'pdf'):
+        return 'Invalid format', 400
+
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('''
+        SELECT
+            r.subdir, r.subdsc, u.callsign AS owner, r.system_id,
+            r.app_type, r.status, r.band,
+            r.freq_output, r.freq_input, r.bandwidth, r.emission_des, r.emission_des2,
+            r.tx_pl, r.rx_pl, r.tx_dcs, r.dmr_cc, r.p25_nac, r.nxdn_ran, r.fusion_dsq,
+            r.tx_power,
+            r.loc_lat, r.loc_lng, r.loc_building, r.loc_street,
+            r.loc_city, r.loc_county, r.loc_state,
+            r.ant_type, r.ant_gain, r.ant_haat, r.ant_amsl, r.ant_ahag,
+            r.ant_favor, r.ant_polarization,
+            r.willbe, r.rdnotes, r.rdnotes2,
+            r.orig_date, r.mod_date, r.expires_date,
+            r.comments
+        FROM coordination_records r
+        JOIN users u ON u.id = r.user_id
+        WHERE r.status = 'Final'
+        ORDER BY r.subdir
+    ''')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # Serialize date/decimal types to strings
+    def _clean(v):
+        if isinstance(v, (date, datetime)):
+            return str(v)
+        if v is None:
+            return ''
+        return v
+
+    records = [{k: _clean(v) for k, v in row.items()} for row in rows]
+    timestamp = datetime.now().strftime('%Y%m%d')
+
+    if fmt == 'csv':
+        buf = io.StringIO()
+        if records:
+            writer = csv.DictWriter(buf, fieldnames=records[0].keys())
+            writer.writeheader()
+            writer.writerows(records)
+        return Response(
+            buf.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': f'attachment; filename=freqy_export_{timestamp}.csv'},
+        )
+
+    if fmt == 'json':
+        return Response(
+            json.dumps(records, indent=2),
+            mimetype='application/json',
+            headers={'Content-Disposition': f'attachment; filename=freqy_export_{timestamp}.json'},
+        )
+
+    if fmt == 'xml':
+        root = ET.Element('coordination_records')
+        for rec in records:
+            el = ET.SubElement(root, 'record')
+            for k, v in rec.items():
+                child = ET.SubElement(el, k)
+                child.text = str(v)
+        xml_bytes = ET.tostring(root, encoding='utf-8', xml_declaration=True)
+        return Response(
+            xml_bytes,
+            mimetype='application/xml',
+            headers={'Content-Disposition': f'attachment; filename=freqy_export_{timestamp}.xml'},
+        )
+
+    if fmt == 'pdf':
+        from fpdf import FPDF
+        pdf = FPDF(orientation='L', unit='mm', format='A4')
+        pdf.set_auto_page_break(auto=True, margin=10)
+        pdf.add_page()
+        pdf.set_font('Helvetica', 'B', 7)
+
+        # Key columns for PDF (too many fields for one page — pick the most useful)
+        cols = [
+            ('ID',        'subdir',       14),
+            ('Owner',     'owner',        16),
+            ('System',    'system_id',    16),
+            ('Type',      'app_type',     18),
+            ('Band',      'band',         10),
+            ('Output',    'freq_output',  18),
+            ('Input',     'freq_input',   18),
+            ('TX PL',     'tx_pl',        12),
+            ('Power',     'tx_power',     12),
+            ('City',      'loc_city',     28),
+            ('ST',        'loc_state',     8),
+            ('Expires',   'expires_date', 20),
+            ('Notes',     'rdnotes',      30),
+        ]
+
+        # Header
+        for label, _, w in cols:
+            pdf.cell(w, 5, label, border=1, align='C')
+        pdf.ln()
+
+        pdf.set_font('Helvetica', '', 6)
+        fill = False
+        for rec in records:
+            if pdf.get_y() > 190:
+                pdf.add_page()
+                pdf.set_font('Helvetica', 'B', 7)
+                for label, _, w in cols:
+                    pdf.cell(w, 5, label, border=1, align='C')
+                pdf.ln()
+                pdf.set_font('Helvetica', '', 6)
+                fill = False
+            pdf.set_fill_color(240, 240, 240) if fill else pdf.set_fill_color(255, 255, 255)
+            for _, field, w in cols:
+                val = str(rec.get(field, ''))
+                pdf.cell(w, 4, val[:28], border='LR', fill=True)
+            pdf.ln()
+            fill = not fill
+
+        # Closing border line
+        for _, _, w in cols:
+            pdf.cell(w, 0, '', border='T')
+
+        pdf_bytes = pdf.output()
+        return Response(
+            bytes(pdf_bytes),
+            mimetype='application/pdf',
+            headers={'Content-Disposition': f'attachment; filename=freqy_export_{timestamp}.pdf'},
+        )
 
 
 @bp.route('/frequency-check', methods=['GET', 'POST'])

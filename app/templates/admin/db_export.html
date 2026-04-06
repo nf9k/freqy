@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}DB Export{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h4 class="mb-1">DB Export</h4>
+    <p class="text-secondary small mb-4">Exports all <strong>Final</strong> status coordination records. User accounts are not included.</p>
+
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-3 text-secondary">Select Format</h6>
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('admin.db_export_download', fmt='csv') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-filetype-csv me-2"></i>CSV &mdash; spreadsheet compatible
+          </a>
+          <a href="{{ url_for('admin.db_export_download', fmt='json') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-filetype-json me-2"></i>JSON &mdash; full field data, machine readable
+          </a>
+          <a href="{{ url_for('admin.db_export_download', fmt='xml') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-filetype-xml me-2"></i>XML &mdash; structured data exchange
+          </a>
+          <a href="{{ url_for('admin.db_export_download', fmt='pdf') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-filetype-pdf me-2"></i>PDF &mdash; printable summary (key fields, landscape)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
