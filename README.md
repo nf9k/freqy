@@ -42,9 +42,9 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 
 **Two-Factor Authentication** — TOTP, hardware security keys, and backup codes
 
-| Setup | Security Key | Backup Codes |
-|-------|-------------|--------------|
-| ![2FA Setup](docs/screenshots/2fa1.png) | ![2FA Security Key](docs/screenshots/2fa2.png) | ![2FA Backup Codes](docs/screenshots/2fa3.png) |
+| Setup | TOTP | Security Key |
+|-------|------|-------------|
+| ![2FA Setup](docs/screenshots/2fa1.png) | ![2FA TOTP](docs/screenshots/2fa2.png) | ![2FA Security Key](docs/screenshots/2fa3.png) |
 
 ---
 
