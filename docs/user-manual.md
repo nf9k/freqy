@@ -14,14 +14,15 @@
 6. [Editing Your Record](#editing-your-record)
 7. [Your Profile](#your-profile)
 8. [Password Management](#password-management)
-9. [Admin Guide](#admin-guide)
+9. [Two-Factor Authentication](#two-factor-authentication)
+10. [Admin Guide](#admin-guide)
    - [User Management](#user-management)
    - [Record Management](#record-management)
    - [Review Changes](#review-changes)
    - [FCC Callsign Lookup](#fcc-callsign-lookup)
-10. [Application Statuses](#application-statuses)
-11. [Frequency Bands](#frequency-bands)
-12. [Technical Reference](#technical-reference)
+11. [Application Statuses](#application-statuses)
+12. [Frequency Bands](#frequency-bands)
+13. [Technical Reference](#technical-reference)
 
 ---
 
@@ -54,7 +55,7 @@ freqy is a web-based frequency coordination management system for amateur radio 
 
 ### Logging In
 
-Enter your callsign and password on the login page. Sessions last 24 hours.
+Enter your callsign and password on the login page. Sessions last 24 hours. If two-factor authentication is enabled on your account, you will be prompted for a verification code after your password is accepted.
 
 ---
 
@@ -179,6 +180,51 @@ Go to the user menu → **Change Password**. Enter your current password and cho
 ### Forgot Password
 
 On the login page, click **Forgot password?** Enter the email address on file for your account. If a match is found, a reset link is emailed to you. The link expires in 24 hours.
+
+---
+
+## Two-Factor Authentication
+
+Two-factor authentication (2FA) adds a second verification step at login. It is optional but recommended.
+
+Access 2FA settings via the user menu → **Security & 2FA**.
+
+### Authenticator App (TOTP)
+
+1. Click **Set Up** next to Authenticator App
+2. Click **Generate QR Code**
+3. Scan the QR code with your authenticator app (Google Authenticator, Authy, 1Password, etc.) — or enter the text key manually if your app supports it
+4. Enter the 6-digit code shown in your app to confirm it's working
+5. Your app is linked and 2FA is enabled
+
+After setup, a set of **backup codes** is displayed. Save these somewhere safe — each code can be used once if you lose access to your authenticator app.
+
+### Security Keys (YubiKey / FIDO2)
+
+1. Click **Add Key** next to Security Keys
+2. Give the key a name (e.g. "YubiKey 5")
+3. Click **Touch Security Key to Register** and tap your key when prompted
+4. The key is registered and can be used at login
+
+You can register multiple keys. To remove a key, click **Remove** next to it in the Security Keys list.
+
+### Logging In with 2FA
+
+After entering your callsign and password, you are taken to a verification page:
+
+- **Authenticator app** — enter the 6-digit code shown in your app
+- **Security key** — click **Use Security Key** and tap your key
+- **Backup code** — enter one of your saved backup codes if you don't have access to your other methods
+
+### Backup Codes
+
+Backup codes are available under **Security & 2FA → Backup Codes**. The page shows how many unused codes remain. To regenerate a fresh set, confirm your password and click **Regenerate Backup Codes** — this invalidates all existing codes.
+
+> If you have 2 or fewer codes remaining, freqy will remind you to regenerate them after a successful backup code login.
+
+### Disabling 2FA
+
+At the bottom of the Security & 2FA page, enter your password and click **Disable 2FA**. This removes your authenticator app, all registered security keys, and all backup codes.
 
 ---
 

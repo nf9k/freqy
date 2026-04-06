@@ -11,6 +11,7 @@ Amateur Radio Frequency Coordination — a web-based replacement for legacy Flex
 - **Admin panel** — user management, record editing, status workflow, change review
 - **FCC ULS integration** — daily callsign database sync; auto-populates name/address on user forms
 - **Expiration notifications** — automated email reminders at 90/60/30/14/7/1 days
+- **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
 - **Status tooltips** — hover any status badge for a plain-language description
 - **Light/dark theme** — toggle between light and dark
 - **Leaflet maps** — click-to-set TX site coordinates
@@ -139,11 +140,13 @@ The app listens on port 5000. Place it behind nginx, Traefik, Caddy, or your pro
 
 ## Building
 
+Always build and push both a versioned tag and `latest`:
+
 ```bash
-docker build --build-arg VERSION=vX.XX -t nf9k/freqy:vX.XX .
-docker push nf9k/freqy:vX.XX
-docker tag nf9k/freqy:vX.XX nf9k/freqy:latest
+docker build -t nf9k/freqy:X.XX -t nf9k/freqy:latest --build-arg VERSION=X.XX .
+docker push nf9k/freqy:X.XX
 docker push nf9k/freqy:latest
+git tag vX.XX && git push --tags
 ```
 
 ## Updating
