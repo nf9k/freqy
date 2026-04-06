@@ -353,7 +353,7 @@ Results include only active records (status: Final, Construction Permit, On Hold
 | XML | All fields, structured data exchange; title as root element attribute |
 | PDF | Key fields in a printable landscape table; title centered at top of each page |
 
-The title line is configurable via the `EXPORT_TITLE` environment variable. Use `{date}` as a placeholder for the current date. Default: `Frequency Coordination Database Export as of {date}`.
+The title line is configurable via the `EXPORT_TITLE` environment variable. Use `{date}` as a placeholder for the current date (formatted MM/DD/YYYY). Default: `Frequency Coordination Database Export as of {date}`.
 
 ---
 

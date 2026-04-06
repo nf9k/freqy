@@ -628,7 +628,7 @@ def db_export_download(fmt):
     records = [{k: _clean(v) for k, v in row.items()} for row in rows]
     now = datetime.now()
     timestamp = now.strftime('%Y%m%d')
-    date_str  = now.strftime('%Y-%m-%d')
+    date_str  = now.strftime('%m/%d/%Y')
     title = current_app.config.get('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
     title = title.replace('{date}', date_str)
 
