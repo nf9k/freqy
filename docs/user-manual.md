@@ -19,6 +19,7 @@
    - [User Management](#user-management)
    - [Record Management](#record-management)
    - [Review Changes](#review-changes)
+   - [Coordination/NOPC Check](#coordinationnopc-check)
    - [FCC Callsign Lookup](#fcc-callsign-lookup)
 11. [Application Statuses](#application-statuses)
 12. [Frequency Bands](#frequency-bands)
@@ -296,6 +297,47 @@ Administrators have access to all fields including:
 | Record | Filter to a specific record ID |
 
 Results are capped at 500 entries. Click any row to open the record.
+
+---
+
+### Coordination/NOPC Check
+
+The **Coordination/NOPC Check** button in the top navigation bar opens the frequency coordination check tool (admin only).
+
+**Purpose:** Before issuing a coordination or processing an NOPC, check a proposed output frequency against existing records for co-channel and adjacent-channel separation conflicts.
+
+**Step 1 — Enter coordinates** using one of three modes:
+
+| Mode | Description |
+|------|-------------|
+| Decimal | Enter latitude and longitude as decimal degrees (negative for West/South) |
+| DMS | Enter degrees, minutes, seconds with N/S and E/W selectors |
+| Map | Click the map to place a marker; drag to adjust |
+
+**Step 2 — Enter the output frequency** in MHz. A band detection hint confirms the coordinated band.
+
+**Step 3 — Click Check Frequency.** Results are split into two tables:
+
+**Co-channel** — records on the same frequency (within 0.1 kHz). Minimum separation is 120 miles for all bands. Failing records (under the minimum) are highlighted in red.
+
+**Adjacent channel** — records within the adjacent channel window for the band. Separation requirements vary by offset and band per IRC Coordination Policy v1.1:
+
+| Band | Offset ≤ | Min Separation |
+|------|----------|---------------|
+| 6m | 20 kHz | 20 mi |
+| 2m | 10 kHz | 40 mi |
+| 2m | 15 kHz | 30 mi |
+| 2m | 20 kHz | 25 mi |
+| 2m | 30 kHz | 20 mi |
+| 222 | 20 kHz | 25 mi |
+| 222 | 40 kHz | 5 mi |
+| 440 | 25 kHz | 5 mi |
+| 440 | 50 kHz | 1 mi |
+| 902/1296 | same as 440 | |
+
+Results include only active records (status: Final, Construction Permit, On Hold, or Audit). Each row links to the full record. A green check indicates the separation rule is met; a red X with the actual distance indicates a conflict.
+
+> **Note:** Separation distances are configurable via `FREQ_CO_CHANNEL_MILES` and `FREQ_ADJ_RULES` environment variables if your region uses different rules.
 
 ---
 

@@ -12,10 +12,11 @@ Amateur Radio Frequency Coordination — a web-based replacement for legacy Flex
 - **FCC ULS integration** — daily callsign database sync; auto-populates name/address on user forms
 - **Expiration notifications** — automated email reminders at 90/60/30/14/7/1 days
 - **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
+- **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars
 - **Status tooltips** — hover any status badge for a plain-language description
 - **Light/dark theme** — toggle between light and dark
 - **Leaflet maps** — click-to-set TX site coordinates
-- **Docker-native** — single `docker compose up` deployment
+- **Docker-native** — single `docker compose up` deployment (`compose.yml`)
 
 ---
 
@@ -129,6 +130,8 @@ All configuration is via `.env`. See `.env.example` for all options.
 | `SMTP_USER` / `SMTP_PASSWORD` | SMTP credentials |
 | `SMTP_FROM_EMAIL` / `SMTP_FROM_NAME` | Sender identity |
 | `ADMIN_NOTIFY_EMAILS` | Comma-separated addresses for new application alerts |
+| `FREQ_CO_CHANNEL_MILES` | Co-channel minimum separation in miles (default: 120) |
+| `FREQ_ADJ_RULES` | Adjacent channel rules as JSON (see `.env.example` for format) |
 
 ---
 
