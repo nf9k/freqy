@@ -58,8 +58,11 @@ def create_app():
 
     import os
     @app.context_processor
-    def inject_version():
-        return {'app_version': os.environ.get('APP_VERSION', 'dev')}
+    def inject_globals():
+        return {
+            'app_version':       os.environ.get('APP_VERSION', 'dev'),
+            'hcaptcha_site_key': app.config.get('HCAPTCHA_SITE_KEY', ''),
+        }
 
     # Extensions
     from .auth import login_manager

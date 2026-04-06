@@ -1,3 +1,5 @@
+import requests as http_requests
+
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for, current_app
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_mail import Message
@@ -8,6 +10,25 @@ from ..auth import (User, check_password, hash_password, consume_reset_token,
 from ..db import dict_cursor, get_db
 
 bp = Blueprint('auth', __name__)
+
+
+def _verify_hcaptcha():
+    """Return True if hCaptcha passes or is not configured."""
+    secret = current_app.config.get('HCAPTCHA_SECRET_KEY', '')
+    if not secret:
+        return True
+    token = request.form.get('h-captcha-response', '')
+    if not token:
+        return False
+    try:
+        resp = http_requests.post(
+            'https://hcaptcha.com/siteverify',
+            data={'secret': secret, 'response': token},
+            timeout=5,
+        )
+        return resp.json().get('success', False)
+    except Exception:
+        return False
 
 
 @bp.route('/callsign-lookup/<callsign>')
@@ -33,6 +54,10 @@ def register():
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
+        if not _verify_hcaptcha():
+            flash('Human verification failed. Please try again.', 'danger')
+            return render_template('auth/register.html')
+
         callsign = request.form.get('callsign', '').strip().upper()
         email    = request.form.get('email', '').strip()
         pw       = request.form.get('password', '')
@@ -125,6 +150,10 @@ def login():
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
+        if not _verify_hcaptcha():
+            flash('Human verification failed. Please try again.', 'danger')
+            return render_template('auth/login.html')
+
         callsign = request.form.get('callsign', '').upper().strip()
         password = request.form.get('password', '')
 
@@ -164,6 +193,10 @@ def logout():
 @bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
+        if not _verify_hcaptcha():
+            flash('Human verification failed. Please try again.', 'danger')
+            return render_template('auth/forgot_password.html')
+
         email = request.form.get('email', '').strip()
 
         conn = get_db()

@@ -32,6 +32,9 @@ class Config:
     WEBAUTHN_RP_ID  = _parsed_url.hostname or 'localhost'
     WEBAUTHN_ORIGIN = os.getenv('APP_URL', 'http://localhost:5000')
 
+    HCAPTCHA_SITE_KEY   = os.getenv('HCAPTCHA_SITE_KEY', '')
+    HCAPTCHA_SECRET_KEY = os.getenv('HCAPTCHA_SECRET_KEY', '')
+
     FREQ_CO_CHANNEL_MILES = int(os.getenv('FREQ_CO_CHANNEL_MILES', 120))
     FREQ_ADJ_RULES = json.loads(os.getenv('FREQ_ADJ_RULES', json.dumps({
         '50':   [[20, 20]],
