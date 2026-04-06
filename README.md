@@ -13,6 +13,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Expiration notifications** — automated email reminders at 90/60/30/14/7/1 days
 - **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
 - **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars
+- **DB export** — admin export of all Final status records in CSV, JSON, XML, or PDF
 - **Status tooltips** — hover any status badge for a plain-language description
 - **Light/dark theme** — toggle between light and dark
 - **Leaflet maps** — click-to-set TX site coordinates
@@ -30,9 +31,9 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 |---------------|-------------|
 | ![Record Detail](docs/screenshots/record_detail.png) | ![Record Edit](docs/screenshots/record_edit.png) |
 
-| Admin Users | Review Changes |
-|-------------|----------------|
-| ![Admin Users](docs/screenshots/admin_users.png) | ![Review Changes](docs/screenshots/review_changes.png) |
+| Admin Users | Review Changes | DB Export |
+|-------------|----------------|-----------|
+| ![Admin Users](docs/screenshots/admin_users.png) | ![Review Changes](docs/screenshots/review_changes.png) | ![DB Export](docs/screenshots/db_export.png) |
 
 **Coordination/NOPC Check** — co-channel and adjacent-channel conflict detection with configurable separation rules
 

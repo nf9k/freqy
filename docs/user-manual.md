@@ -20,6 +20,7 @@
    - [Record Management](#record-management)
    - [Review Changes](#review-changes)
    - [Coordination/NOPC Check](#coordinationnopc-check)
+   - [DB Export](#db-export)
    - [FCC Callsign Lookup](#fcc-callsign-lookup)
 11. [Application Statuses](#application-statuses)
 12. [Frequency Bands](#frequency-bands)
@@ -338,6 +339,19 @@ The **Coordination/NOPC Check** button in the top navigation bar opens the frequ
 Results include only active records (status: Final, Construction Permit, On Hold, or Audit). Each row links to the full record. A green check indicates the separation rule is met; a red X with the actual distance indicates a conflict.
 
 > **Note:** Separation distances are configurable via `FREQ_CO_CHANNEL_MILES` and `FREQ_ADJ_RULES` environment variables if your region uses different rules.
+
+---
+
+### DB Export
+
+`Admin → DB Export` provides a one-click download of all **Final** status coordination records. User accounts are not included.
+
+| Format | Description |
+|--------|-------------|
+| CSV | All fields, spreadsheet compatible |
+| JSON | All fields, machine readable |
+| XML | All fields, structured data exchange |
+| PDF | Key fields in a printable landscape table |
 
 ---
 
