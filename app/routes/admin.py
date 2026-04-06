@@ -694,30 +694,51 @@ def db_export_download(fmt):
             ('Power',     'tx_power',     12),
             ('City',      'loc_city',     28),
             ('ST',        'loc_state',     8),
-            ('Expires',   'expires_date', 20),
-            ('Notes',     'rdnotes',      30),
+            ('Expires',   'expires_date', 22),
+            ('Notes',     'rdnotes',      35),
         ]
 
-        # Header
-        for label, _, w in cols:
-            pdf.cell(w, 5, label, border=1, align='C')
-        pdf.ln()
+        def _fit(text, width):
+            """Truncate text to fit within cell width at current font."""
+            text = str(text)
+            while pdf.get_string_width(text) > width - 1.5:
+                text = text[:-1]
+            return text
 
-        pdf.set_font('Helvetica', '', 6)
+        def _fmt_date(val):
+            """Reformat YYYY-MM-DD to MM/DD/YYYY for PDF display."""
+            if not val:
+                return ''
+            try:
+                parts = str(val).split('-')
+                if len(parts) == 3:
+                    return f'{parts[1]}/{parts[2]}/{parts[0]}'
+            except Exception:
+                pass
+            return str(val)
+
+        def _draw_header():
+            pdf.set_font('Helvetica', 'B', 7)
+            for label, _, w in cols:
+                pdf.cell(w, 5, label, border=1, align='C')
+            pdf.ln()
+            pdf.set_font('Helvetica', '', 6)
+
+        _draw_header()
+
         fill = False
         for rec in records:
             if pdf.get_y() > 190:
                 _add_page_with_title()
-                pdf.set_font('Helvetica', 'B', 7)
-                for label, _, w in cols:
-                    pdf.cell(w, 5, label, border=1, align='C')
-                pdf.ln()
-                pdf.set_font('Helvetica', '', 6)
+                _draw_header()
                 fill = False
             pdf.set_fill_color(240, 240, 240) if fill else pdf.set_fill_color(255, 255, 255)
             for _, field, w in cols:
-                val = str(rec.get(field, ''))
-                pdf.cell(w, 4, val[:28], border='LR', fill=True)
+                if field == 'expires_date':
+                    val = _fmt_date(rec.get(field, ''))
+                else:
+                    val = str(rec.get(field, ''))
+                pdf.cell(w, 4, _fit(val, w), border='LR', fill=True)
             pdf.ln()
             fill = not fill
 
