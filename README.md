@@ -9,7 +9,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Coordination records** — full lifecycle management from application through Final status
 - **User accounts** — self-registration, password recovery, profile management
 - **Admin panel** — user management, record editing, status workflow, change review
-- **FCC ULS integration** — daily callsign database sync; auto-populates name/address on user forms
+- **FCC ULS integration** — daily callsign database sync; auto-populates name/address on user forms; ZIP code lookup auto-fills city/state from the same local dataset
 - **Expiration notifications** — automated email reminders at 90/60/30/14/7/1 days
 - **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
 - **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars

@@ -369,6 +369,14 @@ FCC data is available in three places:
 | Profile / Admin user edit | Compares FCC record against current profile; apply button to update |
 | New application — System ID | Shows licensee name + license class + Active/Expired status as a validation hint |
 
+### ZIP Code Lookup
+
+On profile and admin user edit forms, entering a ZIP code and tabbing out will automatically look up city and state from the same local FCC dataset.
+
+- If the city field is empty, city and state are filled automatically
+- If the city field already has a value (e.g. pre-filled by callsign lookup), matching options appear as clickable badges below the ZIP field without overwriting the current value
+- If the ZIP maps to multiple cities, the first result auto-fills and alternates appear as clickable badges
+
 ---
 
 ## Application Statuses
