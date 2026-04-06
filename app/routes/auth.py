@@ -31,6 +31,25 @@ def _verify_hcaptcha():
         return False
 
 
+@bp.route('/zip-lookup/<zip_code>')
+def zip_lookup(zip_code):
+    """Return distinct city/state matches for a zip code from local FCC data."""
+    zip_code = zip_code.strip()[:10]
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('''
+        SELECT DISTINCT city, state
+        FROM fcc_licenses
+        WHERE zip = %s AND city IS NOT NULL AND state IS NOT NULL
+        ORDER BY city
+        LIMIT 5
+    ''', (zip_code,))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([{'city': r['city'].title(), 'state': r['state'].upper()} for r in rows])
+
+
 @bp.route('/callsign-lookup/<callsign>')
 def callsign_lookup(callsign):
     """Public FCC callsign lookup — data is from public FCC database."""

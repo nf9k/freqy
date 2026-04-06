@@ -196,7 +196,8 @@ CREATE TABLE IF NOT EXISTS fcc_licenses (
     zip             VARCHAR(10),
     license_class   VARCHAR(20),   -- Extra, Advanced, General, Technician, Novice, Technician Plus
     license_status  CHAR(1),       -- A=Active, E=Expired, C=Cancelled, T=Terminated
-    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_zip (zip)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------

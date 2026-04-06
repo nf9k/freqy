@@ -105,6 +105,7 @@
           <label class="form-label" for="zip">ZIP</label>
           <input id="zip" name="zip" type="text" class="form-control"
                  value="{{ user.zip or '' }}">
+          <div id="zipHint" class="form-text"></div>
         </div>
       </div>
 
@@ -123,6 +124,7 @@
 document.getElementById('state').addEventListener('input', function() {
   this.value = this.value.toUpperCase();
 });
+attachZipLookup('zip', 'city', 'state', 'zipHint');
 
 const FIELD_MAP = [
   { key: 'fname',   label: 'First Name', formId: 'fname' },
