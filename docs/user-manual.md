@@ -388,7 +388,7 @@ FCC data is available in three places:
 
 ### Record IDs
 
-Legacy records imported from the Flexweb system retain their original IDs (format `A00001`). New records submitted through this system are assigned sequential IDs starting at `B00001`.
+Records imported from a legacy system retain their original IDs (format `A00001`). New records submitted through freqy are assigned sequential IDs starting at `B00001`.
 
 ### Expiration
 

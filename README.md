@@ -1,6 +1,6 @@
 # freqy
 
-Amateur Radio Frequency Coordination — a web-based replacement for legacy Flexweb flat-file coordination systems.
+A modern, self-hosted web application for amateur radio frequency coordination. Manage the full lifecycle of coordination applications — from submission through final status — with built-in FCC ULS integration, automated expiration reminders, and conflict checking tools.
 
 ---
 
@@ -88,9 +88,9 @@ This starts four containers:
 
 The database schema is applied automatically on first boot.
 
-### 3. Import legacy data (optional)
+### 3. Import existing data (optional)
 
-If migrating from a legacy Flexweb flat-file system:
+If migrating from an existing system, a legacy import script is available:
 
 ```bash
 docker cp /path/to/legacy_data freqy:/tmp/legacy_data
