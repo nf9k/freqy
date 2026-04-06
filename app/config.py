@@ -1,3 +1,4 @@
+import json
 import os
 import urllib.parse
 
@@ -30,3 +31,13 @@ class Config:
     _parsed_url     = urllib.parse.urlparse(os.getenv('APP_URL', 'http://localhost:5000'))
     WEBAUTHN_RP_ID  = _parsed_url.hostname or 'localhost'
     WEBAUTHN_ORIGIN = os.getenv('APP_URL', 'http://localhost:5000')
+
+    FREQ_CO_CHANNEL_MILES = int(os.getenv('FREQ_CO_CHANNEL_MILES', 120))
+    FREQ_ADJ_RULES = json.loads(os.getenv('FREQ_ADJ_RULES', json.dumps({
+        '50':   [[20, 20]],
+        '144':  [[10, 40], [15, 30], [20, 25], [30, 20]],
+        '222':  [[20, 25], [40, 5]],
+        '440':  [[25, 5],  [50, 1]],
+        '902':  [[25, 5],  [50, 1]],
+        '1296': [[25, 5],  [50, 1]],
+    })))

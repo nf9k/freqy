@@ -536,19 +536,13 @@ def reset_password(user_id):
 # ── Frequency coordination check ─────────────────────────────────
 
 # Co-channel minimum separation (miles) — all bands
-_CO_CHANNEL_MILES = 120
+def _get_co_channel_miles():
+    return current_app.config['FREQ_CO_CHANNEL_MILES']
 
-# Adjacent channel rules per band key: list of (max_offset_khz, min_sep_miles)
-# Each entry means: if offset <= max_offset_khz, min separation is min_sep_miles.
-# List must be sorted ascending by max_offset_khz.
-_ADJ_RULES = {
-    '50':   [(20, 20)],
-    '144':  [(10, 40), (15, 30), (20, 25), (30, 20)],
-    '222':  [(20, 25), (40, 5)],
-    '440':  [(25, 5),  (50, 1)],
-    '902':  [(25, 5),  (50, 1)],
-    '1296': [(25, 5),  (50, 1)],
-}
+def _get_adj_rules():
+    # Config stores lists (JSON-safe); convert inner lists to tuples for consistency.
+    return {k: [tuple(pair) for pair in v]
+            for k, v in current_app.config['FREQ_ADJ_RULES'].items()}
 
 
 def _haversine_miles(lat1, lon1, lat2, lon2):
@@ -616,8 +610,8 @@ def frequency_check():
             flash('Frequency is not in a coordinated band (6m, 2m, 222, 440, 902, 1296).', 'warning')
             return render_template('admin/frequency_check.html', results=None, form_data=form_data)
 
-        adj_rules  = _ADJ_RULES[key]
-        max_adj_mhz = adj_rules[-1][0] / 1000.0   # widest adjacent window in MHz
+        adj_rules  = _get_adj_rules().get(key, [])
+        max_adj_mhz = adj_rules[-1][0] / 1000.0 if adj_rules else 0.0
 
         conn = get_db()
         cur  = dict_cursor(conn)
@@ -644,13 +638,14 @@ def frequency_check():
             dist       = _haversine_miles(lat, lon, float(row['loc_lat']), float(row['loc_lng']))
             offset_khz = round(abs(float(row['freq_output']) - freq) * 1000, 3)
 
+            co_channel_miles = _get_co_channel_miles()
             if offset_khz < 0.1:                        # co-channel
-                passes = dist >= _CO_CHANNEL_MILES
+                passes = dist >= co_channel_miles
                 co_channel.append({
                     **row,
                     'distance':       round(dist, 1),
                     'offset_khz':     0,
-                    'required_miles': _CO_CHANNEL_MILES,
+                    'required_miles': co_channel_miles,
                     'passes':         passes,
                 })
             else:
