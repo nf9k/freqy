@@ -598,12 +598,13 @@ def frequency_check():
                 lat = float(request.form.get('lat', ''))
                 lon = float(request.form.get('lon', ''))
 
-            freq = float(request.form.get('freq', ''))
+            freq_str = request.form.get('freq', '')
+            freq = float(freq_str)
         except (ValueError, TypeError):
             flash('Invalid coordinates or frequency.', 'danger')
             return render_template('admin/frequency_check.html', results=None, form_data=request.form)
 
-        form_data = {**request.form, 'lat': lat, 'lon': lon, 'freq': freq}
+        form_data = {**request.form, 'lat': lat, 'lon': lon, 'freq': freq_str}
 
         key = _rules_key(freq)
         if key is None:

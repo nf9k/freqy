@@ -41,8 +41,8 @@
       </ul>
       <ul class="navbar-nav">
         {% if current_user.is_authenticated and current_user.is_admin %}
-        <li class="nav-item me-2">
-          <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.frequency_check') }}">Query Frequency</a>
+        <li class="nav-item me-3">
+          <a class="btn btn-sm btn-success" href="{{ url_for('admin.frequency_check') }}">Coordination/NOPC</a>
         </li>
         {% endif %}
         <li class="nav-item me-2">
