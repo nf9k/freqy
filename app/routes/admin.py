@@ -626,10 +626,15 @@ def db_export_download(fmt):
         return v
 
     records = [{k: _clean(v) for k, v in row.items()} for row in rows]
-    timestamp = datetime.now().strftime('%Y%m%d')
+    now = datetime.now()
+    timestamp = now.strftime('%Y%m%d')
+    date_str  = now.strftime('%Y-%m-%d')
+    title = current_app.config.get('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
+    title = title.replace('{date}', date_str)
 
     if fmt == 'csv':
         buf = io.StringIO()
+        buf.write(f'# {title}\n')
         if records:
             writer = csv.DictWriter(buf, fieldnames=records[0].keys())
             writer.writeheader()
@@ -641,14 +646,15 @@ def db_export_download(fmt):
         )
 
     if fmt == 'json':
+        payload = {'title': title, 'records': records}
         return Response(
-            json.dumps(records, indent=2),
+            json.dumps(payload, indent=2),
             mimetype='application/json',
             headers={'Content-Disposition': f'attachment; filename=freqy_export_{timestamp}.json'},
         )
 
     if fmt == 'xml':
-        root = ET.Element('coordination_records')
+        root = ET.Element('coordination_records', title=title)
         for rec in records:
             el = ET.SubElement(root, 'record')
             for k, v in rec.items():
@@ -665,7 +671,14 @@ def db_export_download(fmt):
         from fpdf import FPDF
         pdf = FPDF(orientation='L', unit='mm', format='A4')
         pdf.set_auto_page_break(auto=True, margin=10)
-        pdf.add_page()
+
+        def _add_page_with_title():
+            pdf.add_page()
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.cell(0, 6, title, ln=True, align='C')
+            pdf.ln(1)
+
+        _add_page_with_title()
         pdf.set_font('Helvetica', 'B', 7)
 
         # Key columns for PDF (too many fields for one page — pick the most useful)
@@ -694,7 +707,7 @@ def db_export_download(fmt):
         fill = False
         for rec in records:
             if pdf.get_y() > 190:
-                pdf.add_page()
+                _add_page_with_title()
                 pdf.set_font('Helvetica', 'B', 7)
                 for label, _, w in cols:
                     pdf.cell(w, 5, label, border=1, align='C')

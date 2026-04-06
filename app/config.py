@@ -35,6 +35,8 @@ class Config:
     HCAPTCHA_SITE_KEY   = os.getenv('HCAPTCHA_SITE_KEY', '')
     HCAPTCHA_SECRET_KEY = os.getenv('HCAPTCHA_SECRET_KEY', '')
 
+    EXPORT_TITLE = os.getenv('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
+
     FREQ_CO_CHANNEL_MILES = int(os.getenv('FREQ_CO_CHANNEL_MILES', 120))
     FREQ_ADJ_RULES = json.loads(os.getenv('FREQ_ADJ_RULES', json.dumps({
         '50':   [[20, 20]],
