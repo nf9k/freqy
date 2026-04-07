@@ -37,7 +37,14 @@ class Config:
 
     EXPORT_TITLE = os.getenv('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
 
-    FREQ_CO_CHANNEL_MILES = int(os.getenv('FREQ_CO_CHANNEL_MILES', 120))
+    FREQ_CO_CHANNEL_MILES = json.loads(os.getenv('FREQ_CO_CHANNEL_MILES', json.dumps({
+        '50':   120,
+        '144':  120,
+        '222':  120,
+        '440':  120,
+        '902':  120,
+        '1296': 120,
+    })))
     FREQ_ADJ_RULES = json.loads(os.getenv('FREQ_ADJ_RULES', json.dumps({
         '50':   [[20, 20]],
         '144':  [[10, 40], [15, 30], [20, 25], [30, 20]],

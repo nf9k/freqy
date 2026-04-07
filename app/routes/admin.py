@@ -657,9 +657,10 @@ def reset_password(user_id):
 
 # ── Frequency coordination check ─────────────────────────────────
 
-# Co-channel minimum separation (miles) — all bands
-def _get_co_channel_miles():
-    return current_app.config['FREQ_CO_CHANNEL_MILES']
+# Co-channel minimum separation (miles) — per band, falls back to 120
+def _get_co_channel_miles(band_key):
+    rules = current_app.config['FREQ_CO_CHANNEL_MILES']
+    return rules.get(band_key, 120)
 
 def _get_adj_rules():
     # Config stores lists (JSON-safe); convert inner lists to tuples for consistency.
@@ -937,7 +938,7 @@ def frequency_check():
             dist       = _haversine_miles(lat, lon, float(row['loc_lat']), float(row['loc_lng']))
             offset_khz = round(abs(float(row['freq_output']) - freq) * 1000, 3)
 
-            co_channel_miles = _get_co_channel_miles()
+            co_channel_miles = _get_co_channel_miles(key)
             if offset_khz < 0.1:                        # co-channel
                 passes = dist >= co_channel_miles
                 co_channel.append({
@@ -963,12 +964,13 @@ def frequency_check():
         adjacent.sort(key=lambda r: r['distance'])
 
         results = {
-            'co_channel': co_channel,
-            'adjacent':   adjacent,
-            'freq':        freq,
-            'band_key':    key,
-            'lat':         lat,
-            'lon':         lon,
+            'co_channel':       co_channel,
+            'adjacent':         adjacent,
+            'freq':             freq,
+            'band_key':         key,
+            'co_channel_miles': _get_co_channel_miles(key),
+            'lat':              lat,
+            'lon':              lon,
         }
 
     return render_template('admin/frequency_check.html', results=results, form_data=form_data)

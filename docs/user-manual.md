@@ -344,7 +344,7 @@ The **Coordination/NOPC Check** button in the top navigation bar opens the frequ
 
 Results include only active records (status: Final, Construction Permit, On Hold, or Audit). Each row links to the full record. A green check indicates the separation rule is met; a red X with the actual distance indicates a conflict.
 
-> **Note:** Separation distances are configurable via `FREQ_CO_CHANNEL_MILES` and `FREQ_ADJ_RULES` environment variables if your region uses different rules.
+> **Note:** Separation distances are configurable via environment variables if your region uses different rules. `FREQ_CO_CHANNEL_MILES` accepts a JSON object keyed by band (`"50"`, `"144"`, `"222"`, `"440"`, `"902"`, `"1296"`) with the minimum co-channel separation in miles for each. `FREQ_ADJ_RULES` accepts a JSON object with the same band keys, each containing a list of `[max_offset_khz, min_separation_miles]` pairs.
 
 ---
 
