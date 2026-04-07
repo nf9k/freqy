@@ -37,6 +37,9 @@ class Config:
 
     EXPORT_TITLE = os.getenv('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
 
+    DEMO_MODE         = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+    DEMO_RESET_TOKEN  = os.getenv('DEMO_RESET_TOKEN', '')
+
     FREQ_CO_CHANNEL_MILES = json.loads(os.getenv('FREQ_CO_CHANNEL_MILES', json.dumps({
         '50':   120,
         '144':  120,

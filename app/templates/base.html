@@ -73,6 +73,16 @@
 </nav>
 {% endif %}
 
+{% if demo_mode %}
+<div class="alert alert-warning rounded-0 mb-0 py-2 text-center small border-0 border-bottom border-warning">
+  <strong>Demo Mode</strong> — Login as <code>user</code> / <code>user</code> (regular) or <code>admin</code> / <code>admin</code> (admin).
+  Data resets nightly.
+  {% if current_user.is_authenticated and current_user.is_admin %}
+  <button class="btn btn-sm btn-outline-warning ms-3 py-0" id="demo-reset-btn">Reset Now</button>
+  {% endif %}
+</div>
+{% endif %}
+
 <div class="container-fluid py-4">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
@@ -94,6 +104,22 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 {% block scripts %}{% endblock %}
+{% if demo_mode and current_user.is_authenticated and current_user.is_admin %}
+<script>
+const _demoBtn = document.getElementById('demo-reset-btn');
+if (_demoBtn) {
+  _demoBtn.addEventListener('click', function() {
+    if (!confirm('Reset all demo data to defaults?')) return;
+    _demoBtn.disabled = true;
+    _demoBtn.textContent = 'Resetting…';
+    fetch('/demo/reset', {method:'POST'})
+      .then(r => r.json())
+      .then(d => { if (d.success) location.reload(); else alert(d.message); })
+      .catch(() => { _demoBtn.disabled = false; _demoBtn.textContent = 'Reset Now'; });
+  });
+}
+</script>
+{% endif %}
 <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));</script>
 <script>
 (function() {

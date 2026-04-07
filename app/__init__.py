@@ -62,6 +62,7 @@ def create_app():
         return {
             'app_version':       os.environ.get('APP_VERSION', 'dev'),
             'hcaptcha_site_key': app.config.get('HCAPTCHA_SITE_KEY', ''),
+            'demo_mode':         app.config.get('DEMO_MODE', False),
         }
 
     # Extensions
@@ -76,6 +77,7 @@ def create_app():
     from .routes.profile import bp as profile_bp
     from .routes.admin import bp as admin_bp
     from .routes.twofa import bp as twofa_bp
+    from .routes.demo import bp as demo_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -83,5 +85,6 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(twofa_bp)
+    app.register_blueprint(demo_bp)
 
     return app
