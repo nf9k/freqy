@@ -107,6 +107,22 @@ def clean(val):
     return None if v in NONE_VALUES else v
 
 
+def normalize_phone(val):
+    """Normalize a phone number to (NXX) NXX-XXXX format.
+    Strips non-digits; formats 10-digit US numbers. Falls back to
+    truncating at 20 chars if the number can't be normalized."""
+    v = clean(val)
+    if not v:
+        return None
+    digits = ''.join(c for c in v if c.isdigit())
+    if len(digits) == 11 and digits[0] == '1':
+        digits = digits[1:]   # strip leading country code
+    if len(digits) == 10:
+        return f'({digits[:3]}) {digits[3:6]}-{digits[6:]}'
+    # Can't normalize — truncate to fit column
+    return v[:20]
+
+
 def flag(val):
     """Y/N/1/0 → True/False, else None."""
     v = clean(val)
@@ -218,9 +234,9 @@ def import_user(conn, p, dry_run):
         'city':        clean(p.get('CITYX')),
         'state':       parse_state(p.get('STATE')),
         'zip':         clean(p.get('ZIPCO')),
-        'phone_home':  clean(p.get('HPHON')),
-        'phone_work':  clean(p.get('WPHON')),
-        'phone_cell':  clean(p.get('CPHON')),
+        'phone_home':  normalize_phone(p.get('HPHON')),
+        'phone_work':  normalize_phone(p.get('WPHON')),
+        'phone_cell':  normalize_phone(p.get('CPHON')),
         'is_admin':    0,
     }
 
@@ -351,9 +367,9 @@ def import_record(conn, user_id, p, dry_run):
         'fdl_loss_rx':      parse_decimal(p.get('FDL_LOSS_RX')),
         'trustee_name':     clean(p.get('SYSTEM_TRUSTEE')),
         'trustee_callsign': clean(p.get('SYSTEM_TRUSTEE_CALL')),
-        'trustee_phone_day':  clean(p.get('SYSTEM_TRUSTEE_DPH')),
-        'trustee_phone_eve':  clean(p.get('SYSTEM_TRUSTEE_EPH')),
-        'trustee_phone_cell': clean(p.get('SYSTEM_TRUSTEE_CPH')),
+        'trustee_phone_day':  normalize_phone(p.get('SYSTEM_TRUSTEE_DPH')),
+        'trustee_phone_eve':  normalize_phone(p.get('SYSTEM_TRUSTEE_EPH')),
+        'trustee_phone_cell': normalize_phone(p.get('SYSTEM_TRUSTEE_CPH')),
         'trustee_email':    clean(p.get('SYSTEM_TRUSTEE_EML')),
     }
 
