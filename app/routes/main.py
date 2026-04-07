@@ -47,10 +47,16 @@ def dashboard():
             'by_type':   by_type,
             'by_band':   by_band,
         }
-        cur.execute(
-            'SELECT * FROM coordination_records WHERE user_id = %s ORDER BY mod_date DESC',
-            (current_user.id,)
-        )
+        if current_user.dashboard_final_only:
+            cur.execute(
+                "SELECT * FROM coordination_records WHERE user_id = %s AND status = 'Final' ORDER BY mod_date DESC",
+                (current_user.id,)
+            )
+        else:
+            cur.execute(
+                'SELECT * FROM coordination_records WHERE user_id = %s ORDER BY mod_date DESC',
+                (current_user.id,)
+            )
         my_records = cur.fetchall()
         cur.close()
         conn.close()

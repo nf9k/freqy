@@ -51,7 +51,16 @@
 {# ── My records ── #}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h5 class="mb-0">My Records</h5>
-  <a href="{{ url_for('records.new_application') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Application</a>
+  <div class="d-flex gap-2 align-items-center">
+    <form method="post" action="{{ url_for('main.toggle_final_only') }}" class="m-0">
+      <button type="submit" class="btn btn-sm {{ 'btn-outline-success' if current_user.dashboard_final_only else 'btn-outline-secondary' }}"
+              title="{{ 'Showing Final only — click to show all' if current_user.dashboard_final_only else 'Showing all — click to show Final only' }}">
+        <i class="bi bi-funnel{{ '-fill' if current_user.dashboard_final_only else '' }}"></i>
+        {{ 'Final Only' if current_user.dashboard_final_only else 'All Records' }}
+      </button>
+    </form>
+    <a href="{{ url_for('records.new_application') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Application</a>
+  </div>
 </div>
 {% if my_records %}
 <div class="table-responsive">
