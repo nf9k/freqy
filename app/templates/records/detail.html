@@ -323,6 +323,12 @@
           <div class="spinner-border spinner-border-sm text-secondary"></div> Loading preview…
         </div>
         <div id="nopcContent" class="d-none">
+          <div class="row g-2 mb-2 align-items-center">
+            <div class="col-auto"><strong class="small">From:</strong></div>
+            <div class="col-auto">
+              <select id="nopcFrom" class="form-select form-select-sm" style="width:auto;"></select>
+            </div>
+          </div>
           <p class="small mb-1"><strong>To:</strong> <span id="nopcTo"></span></p>
           <p class="small mb-2"><strong>Subject:</strong> <span id="nopcSubject"></span></p>
           <pre id="nopcBody" class="border rounded p-3 bg-body-tertiary small" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></pre>
@@ -355,6 +361,7 @@
   const errEl   = document.getElementById('nopcError');
   const sentEl  = document.getElementById('nopcSent');
   const sendBtn = document.getElementById('nopcSendBtn');
+  const fromEl  = document.getElementById('nopcFrom');
   const toEl    = document.getElementById('nopcTo');
   const subjEl  = document.getElementById('nopcSubject');
   const bodyEl  = document.getElementById('nopcBody');
@@ -377,6 +384,13 @@
           errEl.classList.remove('d-none');
           return;
         }
+        fromEl.innerHTML = '';
+        data.from_addrs.forEach(function(addr) {
+          var opt = document.createElement('option');
+          opt.value = addr;
+          opt.textContent = addr;
+          fromEl.appendChild(opt);
+        });
         toEl.textContent = data.recipients;
         subjEl.textContent = data.subject;
         bodyEl.textContent = data.body;
@@ -394,7 +408,11 @@
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending…';
 
-    fetch(btn.dataset.sendUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    fetch(btn.dataset.sendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from_addr: fromEl.value })
+    })
       .then(r => r.json())
       .then(data => {
         if (data.success) {

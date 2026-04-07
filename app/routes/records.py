@@ -506,9 +506,12 @@ def _build_nopc_body(r):
 def nopc_preview(subdir):
     if not current_user.is_admin:
         abort(403)
-    recipients = current_app.config.get('NOPC_EMAILS', [])
+    recipients = current_app.config.get('NOPC_EMAIL_TO', [])
     if not recipients:
-        return jsonify(success=False, message='NOPC_EMAILS is not configured.'), 400
+        return jsonify(success=False, message='NOPC_EMAIL_TO is not configured.'), 400
+    from_addrs = current_app.config.get('NOPC_EMAIL_FROM', [])
+    if not from_addrs:
+        return jsonify(success=False, message='NOPC_EMAIL_FROM is not configured.'), 400
 
     conn = get_db()
     cur  = dict_cursor(conn)
@@ -522,7 +525,8 @@ def nopc_preview(subdir):
 
     body = _build_nopc_body(record)
     subject = f"New NOPC from Indiana: {record.get('freq_output') or subdir}"
-    return jsonify(success=True, subject=subject, body=body, recipients=', '.join(recipients))
+    return jsonify(success=True, subject=subject, body=body,
+                   recipients=', '.join(recipients), from_addrs=from_addrs)
 
 
 @bp.route('/<subdir>/nopc-send', methods=['POST'])
@@ -530,9 +534,17 @@ def nopc_preview(subdir):
 def nopc_send(subdir):
     if not current_user.is_admin:
         abort(403)
-    recipients = current_app.config.get('NOPC_EMAILS', [])
+    recipients = current_app.config.get('NOPC_EMAIL_TO', [])
     if not recipients:
-        return jsonify(success=False, message='NOPC_EMAILS is not configured.'), 400
+        return jsonify(success=False, message='NOPC_EMAIL_TO is not configured.'), 400
+    from_addrs = current_app.config.get('NOPC_EMAIL_FROM', [])
+    if not from_addrs:
+        return jsonify(success=False, message='NOPC_EMAIL_FROM is not configured.'), 400
+
+    data = request.get_json(silent=True) or {}
+    chosen_from = data.get('from_addr', '').strip()
+    if chosen_from not in from_addrs:
+        return jsonify(success=False, message='Invalid sender address.'), 400
 
     conn = get_db()
     cur  = dict_cursor(conn)
@@ -547,11 +559,11 @@ def nopc_send(subdir):
     body = _build_nopc_body(record)
     subject = f"New NOPC from Indiana: {record.get('freq_output') or subdir}"
 
-    msg = Message(subject=subject, recipients=recipients, body=body)
+    msg = Message(subject=subject, recipients=recipients, body=body, sender=chosen_from)
     try:
         mail.send(msg)
     except Exception as e:
         current_app.logger.error('Failed to send NOPC email for %s: %s', subdir, e)
         return jsonify(success=False, message=f'Failed to send: {e}'), 500
 
-    return jsonify(success=True, message=f'NOPC sent to {", ".join(recipients)}.')
+    return jsonify(success=True, message=f'NOPC sent to {", ".join(recipients)} from {chosen_from}.')

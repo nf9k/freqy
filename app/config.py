@@ -35,8 +35,11 @@ class Config:
     HCAPTCHA_SITE_KEY   = os.getenv('HCAPTCHA_SITE_KEY', '')
     HCAPTCHA_SECRET_KEY = os.getenv('HCAPTCHA_SECRET_KEY', '')
 
-    NOPC_EMAILS = [
-        e.strip() for e in os.getenv('NOPC_EMAILS', '').split(',') if e.strip()
+    NOPC_EMAIL_TO = [
+        e.strip() for e in os.getenv('NOPC_EMAIL_TO', '').split(',') if e.strip()
+    ]
+    NOPC_EMAIL_FROM = [
+        e.strip() for e in os.getenv('NOPC_EMAIL_FROM', '').split(',') if e.strip()
     ]
 
     EXPORT_TITLE = os.getenv('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
