@@ -58,6 +58,11 @@ def edit_record(subdir):
             except ValueError:
                 return None
 
+        # Capture old status for change notification
+        cur.execute('SELECT status, subdsc, user_id FROM coordination_records WHERE subdir = %s', (subdir,))
+        old_rec = cur.fetchone()
+        old_status = old_rec['status'] if old_rec else None
+
         # Resolve secondary contact callsign → id
         sec_call = val('secondary_contact_callsign')
         sec_id = None
@@ -125,6 +130,33 @@ def edit_record(subdir):
             subdir,
         ))
         conn.commit()
+
+        # Send status-change notification if status changed
+        new_status = val('status')
+        if old_status and new_status and new_status != old_status and old_rec:
+            cur2 = dict_cursor(conn)
+            cur2.execute('SELECT callsign, email FROM users WHERE id = %s', (old_rec['user_id'],))
+            owner = cur2.fetchone()
+            cur2.close()
+            if owner and owner['email']:
+                try:
+                    desc = old_rec['subdsc'] or subdir
+                    msg = Message(
+                        subject=f'[freqy] Status update for {subdir}',
+                        recipients=[owner['email']],
+                        body=(
+                            f"Hello {owner['callsign']},\n\n"
+                            f"The status of your coordination record {subdir} ({desc}) "
+                            f"has been updated from '{old_status}' to '{new_status}'.\n\n"
+                            f"You can view your record at: "
+                            f"{url_for('records.detail', subdir=subdir, _external=True)}\n\n"
+                            f"73,\nfreqy"
+                        ),
+                    )
+                    mail.send(msg)
+                except Exception:
+                    current_app.logger.exception('Failed to send status-change email for %s', subdir)
+
         cur.close()
         conn.close()
         flash('Record updated.', 'success')
