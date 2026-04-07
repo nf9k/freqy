@@ -217,7 +217,7 @@
               <th>Record</th>
               <th>System</th>
               <th>Output Freq</th>
-              <th>Offset</th>
+              <th>Freq Sep</th>
               <th>City, ST</th>
               <th>Status</th>
               <th class="text-end">Distance</th>
@@ -230,7 +230,7 @@
               <td><a href="{{ url_for('records.detail', subdir=r.subdir) }}" target="_blank">{{ r.subdir }}</a></td>
               <td>{{ r.system_id or r.callsign }}</td>
               <td class="font-monospace">{{ '%.4f' % r.freq_output }}</td>
-              <td class="text-secondary small">±{{ r.offset_khz }} kHz</td>
+              <td class="text-secondary small">{{ r.offset_khz }} kHz</td>
               <td class="text-secondary small">{{ r.loc_city or '—' }}{% if r.loc_state %}, {{ r.loc_state }}{% endif %}</td>
               <td><span class="badge bg-secondary">{{ r.status }}</span></td>
               <td class="text-end fw-bold {% if not r.passes %}text-danger{% else %}text-success{% endif %}">
