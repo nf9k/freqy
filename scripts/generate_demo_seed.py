@@ -134,7 +134,9 @@ def gen_callsign(used):
     L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     while True:
         style = RNG.choice([1,2,3,4])
-        region = str(RNG.randint(0,9))
+        # 95% area 9, 2.5% area 8, 2.5% area 4
+        r = RNG.random()
+        region = '9' if r < 0.95 else ('8' if r < 0.975 else '4')
         if style == 1:
             cs = f'{RNG.choice("WKN")}{region}{"".join(RNG.choices(L,k=2))}'
         elif style == 2:
