@@ -25,8 +25,9 @@ def hashpw(pw):
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt(rounds=10)).decode()
 
 print('Hashing passwords...')
-ADMIN_HASH = hashpw('admin')
-USER_HASH  = hashpw('user')
+ADMIN_HASH        = hashpw('admin')
+USER_HASH         = hashpw('user')
+PLACEHOLDER_HASH  = hashpw(os.urandom(32).hex())  # fake users — not loginable
 
 # ── Source data ──────────────────────────────────────────────────
 FIRSTS = [
@@ -259,7 +260,7 @@ for u in fake_users:
     lines.append(
         f"INSERT INTO users (id,callsign,password_hash,email,fname,lname,"
         f"address,city,state,zip,phone_home,is_admin,created_at,updated_at) VALUES "
-        f"({u['id']},{sq(u['callsign'])},NULL,{sq(u['email'])},"
+        f"({u['id']},{sq(u['callsign'])},{sq(PLACEHOLDER_HASH)},{sq(u['email'])},"
         f"{sq(u['fname'])},{sq(u['lname'])},"
         f"{sq(u['address'])},{sq(u['city'])},{sq(u['state'])},"
         f"{sq(u['zip'])},{sq(u['phone'])},0,NOW(),NOW());"
