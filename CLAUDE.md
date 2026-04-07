@@ -1,4 +1,4 @@
-# freqy-database — Claude Code Context
+# freqy — Claude Code Context
 
 ## Project Overview
 
@@ -191,6 +191,22 @@ Tracks which reminder thresholds have fired for each record (prevents duplicate 
 | `sent_at` | DATETIME | |
 
 Unique constraint on `(record_id, days_threshold)`.
+
+## Deploy Process
+
+When shipping a feature:
+1. Update `README.md` and `docs/user-manual.md` to reflect the change
+2. Commit everything together (code + docs in one commit, or docs as immediate follow-up)
+3. Build: `docker build --build-arg VERSION=X.XX -t nf9k/freqy:X.XX -t nf9k/freqy:latest .`
+4. Push: `docker push nf9k/freqy:X.XX && docker push nf9k/freqy:latest`
+5. Deploy: `ssh root@docker-core "cd /docker/arcane/data/projects/freqy && docker compose pull web && docker compose up -d web"`
+
+Use `compose.yml`, not `docker-compose.yml`.
+
+## Preferences
+
+- Dates displayed to the user: **MM/DD/YYYY**
+- Times displayed to the user: **military, no colon — HHMM** (e.g. 1430)
 
 ## Conventions
 
