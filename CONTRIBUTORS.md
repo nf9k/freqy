@@ -8,7 +8,7 @@ freqy is developed by [NF9K](https://github.com/nf9k) with gratitude to the foll
 
 | Contributor | Callsign | Contribution |
 |-------------|----------|--------------|
-| Randy Fisher | K9MMQ | Status badge hover descriptions — plain-language tooltips explaining each coordination status |
+| Randy Fisher | K9MMQ | Status badge hover descriptions — plain-language tooltips explaining each coordination status; Send NOPC button for adjacent area coordinator notifications |
 | Douglas Paquette | KD9IAQ | Dashboard "Final Only" filter — user preference to show only finalized coordinations |
 
 ---
