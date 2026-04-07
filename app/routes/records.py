@@ -1,6 +1,7 @@
+import math
 from datetime import date, timedelta
 
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from flask_mail import Message
 
@@ -426,3 +427,131 @@ def update_secondary(subdir):
     else:
         flash('Secondary contact cleared.', 'success')
     return redirect(url_for('records.detail', subdir=subdir))
+
+
+# ── NOPC email ────────────────────────────────────────────────
+
+def _compute_erp(tx_power, fdl_loss, ant_gain):
+    """Compute EIRP and ERP from TX power (W), feedline loss (dB), and antenna gain (dBd)."""
+    tx_w = float(tx_power or 0)
+    loss_db = float(fdl_loss or 0)
+    gain_dbd = float(ant_gain or 0)
+    if tx_w <= 0:
+        return 0, 0, 0, 0
+    tx_dbm = 10 * math.log10(1000 * tx_w)
+    after = tx_dbm - loss_db
+    eirp_dbm = after + gain_dbd
+    eirp_watts = 10 ** ((eirp_dbm - 30) / 10)
+    erp_dbm = eirp_dbm - 2.15
+    erp_watts = 10 ** ((erp_dbm - 30) / 10)
+    return eirp_dbm, eirp_watts, erp_dbm, erp_watts
+
+
+def _build_nopc_body(r):
+    """Build the NOPC email body text from a coordination record dict."""
+    eirp_dbm, eirp_watts, erp_dbm, erp_watts = _compute_erp(
+        r.get('tx_power'), r.get('fdl_loss'), r.get('ant_gain'))
+
+    lat = r.get('loc_lat')
+    lng = r.get('loc_lng')
+    coord_dec = f"{lat} N / {lng} W" if lat and lng else "—"
+
+    lines = [
+        "Adjacent Area Frequency Coordinators:",
+        "",
+        "Please review the following proposal and provide your comments within 30",
+        "days. Send your replies to the IRC Chairman.",
+        "",
+        "Thank you.",
+        "",
+        "System Information",
+        "----------------------------",
+        f"Record: {r.get('subdir', '—')}",
+        f"Transmitter Callsign: {r.get('system_id') or '—'}",
+        f"Output Frequency: {r.get('freq_output') or '—'}",
+        f"Output Tone: {r.get('tx_pl') or '—'}",
+        f"Input Frequency: {r.get('freq_input') or '—'}",
+        f"Input Tone: {r.get('rx_pl') or '—'}",
+        f"Mode(s): {r.get('rdnotes2') or '—'}",
+        f"Record Type: {r.get('app_type') or '—'}",
+        "",
+        "Trustee Information",
+        "----------------------------",
+        f"Callsign: {r.get('trustee_callsign') or '—'}",
+        f"Name: {r.get('trustee_name') or '—'}",
+        f"Email: {r.get('trustee_email') or '—'}",
+        f"Phone: {r.get('trustee_phone_day') or r.get('trustee_phone_eve') or r.get('trustee_phone_cell') or '—'}",
+        "",
+        "Site Information",
+        "----------------------------",
+        f"Address: {r.get('loc_street') or '—'}",
+        f"Building: {r.get('loc_building') or '—'}",
+        f"City: {r.get('loc_city') or '—'}",
+        f"Coordinates: {coord_dec}",
+        f"Antenna HAAT (ft): {r.get('ant_haat') or '—'}",
+        f"Antenna AMSL (ft): {r.get('ant_amsl') or '—'}",
+        f"Antenna Type: {r.get('ant_type') or '—'}",
+        f"Antenna Gain: {r.get('ant_gain') or '—'} dBd",
+        f"Transmitter Power: {r.get('tx_power') or '—'} W",
+        f"System Loss: {r.get('fdl_loss') or '—'} dB",
+        f"EIRP: {eirp_dbm:.2f} dBm (~{eirp_watts:.2f} W)",
+        f"ERP: {erp_dbm:.2f} dBm (~{erp_watts:.2f} W)",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+@bp.route('/<subdir>/nopc-preview')
+@login_required
+def nopc_preview(subdir):
+    if not current_user.is_admin:
+        abort(403)
+    recipients = current_app.config.get('NOPC_EMAILS', [])
+    if not recipients:
+        return jsonify(success=False, message='NOPC_EMAILS is not configured.'), 400
+
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('SELECT * FROM coordination_records WHERE subdir = %s', (subdir,))
+    record = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not record:
+        return jsonify(success=False, message='Record not found.'), 404
+
+    body = _build_nopc_body(record)
+    subject = f"New NOPC from Indiana: {record.get('freq_output') or subdir}"
+    return jsonify(success=True, subject=subject, body=body, recipients=', '.join(recipients))
+
+
+@bp.route('/<subdir>/nopc-send', methods=['POST'])
+@login_required
+def nopc_send(subdir):
+    if not current_user.is_admin:
+        abort(403)
+    recipients = current_app.config.get('NOPC_EMAILS', [])
+    if not recipients:
+        return jsonify(success=False, message='NOPC_EMAILS is not configured.'), 400
+
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('SELECT * FROM coordination_records WHERE subdir = %s', (subdir,))
+    record = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not record:
+        return jsonify(success=False, message='Record not found.'), 404
+
+    body = _build_nopc_body(record)
+    subject = f"New NOPC from Indiana: {record.get('freq_output') or subdir}"
+
+    msg = Message(subject=subject, recipients=recipients, body=body)
+    try:
+        mail.send(msg)
+    except Exception as e:
+        current_app.logger.error('Failed to send NOPC email for %s: %s', subdir, e)
+        return jsonify(success=False, message=f'Failed to send: {e}'), 500
+
+    return jsonify(success=True, message=f'NOPC sent to {", ".join(recipients)}.')

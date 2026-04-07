@@ -352,6 +352,21 @@ Results include only active records (status: Final, Construction Permit, On Hold
 
 ---
 
+### Send NOPC
+
+On any record detail page, admins can click the green **Send NOPC** button to notify adjacent area frequency coordinators about a new or changed coordination.
+
+1. Click **Send NOPC** — a modal opens with a preview of the email
+2. Review the message — it includes system info, trustee details, site/antenna data, and computed EIRP/ERP
+3. The **To** line shows the configured recipient list
+4. Click **Send NOPC** to send, or **Close** to cancel
+
+The recipient list is configured via the `NOPC_EMAILS` environment variable (comma-separated email addresses). If `NOPC_EMAILS` is not set, the button will display an error.
+
+The email subject follows the format: `New NOPC from Indiana: [output frequency]`
+
+---
+
 ### DB Export
 
 `Admin → DB Export` provides a one-click download of all **Final** status coordination records. User accounts are not included.

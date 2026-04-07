@@ -14,6 +14,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Change notifications** — record owners receive an email summary of any changes made by an admin (self-edits excluded)
 - **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
 - **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars
+- **Send NOPC** — admin button on record detail to email adjacent area coordinators with system/site details and ERP calculation
 - **DB export** — admin export of all Final status records in CSV, JSON, XML, or PDF
 - **Status tooltips** — hover any status badge for a plain-language description
 - **Dashboard filter** — user preference to show only Final records on the dashboard
@@ -148,6 +149,7 @@ All configuration is via `.env`. See `.env.example` for all options.
 | `ADMIN_NOTIFY_EMAILS` | Comma-separated addresses for new application alerts |
 | `FREQ_CO_CHANNEL_MILES` | Co-channel minimum separation per band as JSON, e.g. `{"50":120,"144":120,"222":120,"440":75,"902":50,"1296":50}` (default: 120 miles for all bands) |
 | `FREQ_ADJ_RULES` | Adjacent channel rules as JSON (see `.env.example` for format) |
+| `NOPC_EMAILS` | Comma-separated adjacent area coordinator emails for NOPC notifications |
 | `EXPORT_TITLE` | Title line included in all DB exports; `{date}` is replaced with today's date |
 | `HCAPTCHA_SITE_KEY` / `HCAPTCHA_SECRET_KEY` | hCaptcha keys for login, register, and password reset; omit to disable |
 
