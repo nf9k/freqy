@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
     totp_enabled     TINYINT(1)   NOT NULL DEFAULT 0,
     webauthn_enabled TINYINT(1)   NOT NULL DEFAULT 0,
     license_class    VARCHAR(20),               -- FCC license class (Extra, General, etc.)
+    dashboard_final_only TINYINT(1) NOT NULL DEFAULT 0,
     created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

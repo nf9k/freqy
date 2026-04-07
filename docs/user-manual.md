@@ -65,6 +65,10 @@ Enter your callsign and password on the login page. Sessions last 24 hours. If t
 
 After logging in you are taken to your dashboard, which shows all coordination records where your account is the primary owner.
 
+### Filter: Final Only
+
+A toggle button appears next to the **New Application** button at the top of the dashboard. Click it to switch between showing **All Records** or **Final Only**. When set to Final Only, the dashboard hides records in other statuses (New, Construction Permit, Cancelled, etc.) and shows only your active, finalized coordinations. This preference is saved to your account and persists across sessions.
+
 **Columns shown:**
 
 | Column | Description |

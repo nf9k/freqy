@@ -14,11 +14,12 @@ login_manager.login_message_category = 'warning'
 
 
 class User(UserMixin):
-    def __init__(self, id, callsign, email, is_admin):
+    def __init__(self, id, callsign, email, is_admin, dashboard_final_only=0):
         self.id       = id
         self.callsign = callsign
         self.email    = email
         self.is_admin = bool(is_admin)
+        self.dashboard_final_only = bool(dashboard_final_only)
 
     # Flask-Login uses str(user.id) for session cookie
     def get_id(self):
@@ -30,7 +31,7 @@ def load_user(user_id):
     conn = get_db()
     cur  = dict_cursor(conn)
     cur.execute(
-        'SELECT id, callsign, email, is_admin FROM users WHERE id = %s',
+        'SELECT id, callsign, email, is_admin, dashboard_final_only FROM users WHERE id = %s',
         (user_id,)
     )
     row = cur.fetchone()
@@ -38,7 +39,8 @@ def load_user(user_id):
     conn.close()
     if row is None:
         return None
-    return User(row['id'], row['callsign'], row['email'], row['is_admin'])
+    return User(row['id'], row['callsign'], row['email'], row['is_admin'],
+                row['dashboard_final_only'])
 
 
 def admin_required(f):

@@ -16,6 +16,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars
 - **DB export** — admin export of all Final status records in CSV, JSON, XML, or PDF
 - **Status tooltips** — hover any status badge for a plain-language description
+- **Dashboard filter** — user preference to show only Final records on the dashboard
 - **Light/dark theme** — toggle between light and dark
 - **Date picker** — calendar date picker on all date fields
 - **Leaflet maps** — click-to-set TX site coordinates

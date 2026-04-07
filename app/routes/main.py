@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
 
 from ..constants import BAND_LABELS
 from ..db import dict_cursor, get_db
+
+
 
 bp = Blueprint('main', __name__)
 
@@ -55,11 +57,32 @@ def dashboard():
         return render_template('main/dashboard_admin.html', stats=stats, my_records=my_records,
                                band_labels=BAND_LABELS)
 
-    cur.execute(
-        'SELECT * FROM coordination_records WHERE user_id = %s ORDER BY mod_date DESC',
-        (current_user.id,)
-    )
+    if current_user.dashboard_final_only:
+        cur.execute(
+            "SELECT * FROM coordination_records WHERE user_id = %s AND status = 'Final' ORDER BY mod_date DESC",
+            (current_user.id,)
+        )
+    else:
+        cur.execute(
+            'SELECT * FROM coordination_records WHERE user_id = %s ORDER BY mod_date DESC',
+            (current_user.id,)
+        )
     records = cur.fetchall()
     cur.close()
     conn.close()
     return render_template('main/dashboard_user.html', records=records)
+
+
+@bp.route('/dashboard/toggle-final-only', methods=['POST'])
+@login_required
+def toggle_final_only():
+    new_val = 0 if current_user.dashboard_final_only else 1
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('UPDATE users SET dashboard_final_only = %s WHERE id = %s',
+                (new_val, current_user.id))
+    conn.commit()
+    cur.close()
+    conn.close()
+    current_user.dashboard_final_only = bool(new_val)
+    return redirect(url_for('main.dashboard'))
