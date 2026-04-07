@@ -12,13 +12,13 @@
     <form method="get" class="row g-2 align-items-end">
       <div class="col-md-2">
         <label class="form-label" for="from">From</label>
-        <input id="from" name="from" type="date" class="form-control"
-               value="{{ date_from }}">
+        <input id="from" name="from" type="text" class="form-control datepicker"
+               value="{{ date_from }}" placeholder="MM/DD/YYYY">
       </div>
       <div class="col-md-2">
         <label class="form-label" for="to">To</label>
-        <input id="to" name="to" type="date" class="form-control"
-               value="{{ date_to }}">
+        <input id="to" name="to" type="text" class="form-control datepicker"
+               value="{{ date_to }}" placeholder="MM/DD/YYYY">
       </div>
       <div class="col-md-2">
         <label class="form-label" for="callsign">Changed By</label>

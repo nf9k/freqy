@@ -1,3 +1,12 @@
+// Initialize Flatpickr on all .datepicker fields
+document.addEventListener('DOMContentLoaded', () => {
+    flatpickr('.datepicker', {
+        dateFormat: 'm/d/Y',
+        allowInput: true,
+        disableMobile: false,
+    });
+});
+
 // Auto-dismiss flash alerts after 5 seconds
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.alert-dismissible').forEach(el => {

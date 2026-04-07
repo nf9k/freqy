@@ -443,15 +443,25 @@ def review_changes():
     callsign  = request.args.get('callsign', '').strip().upper()
     subdir    = request.args.get('subdir', '').strip().upper()
 
+    def _to_sql_date(s):
+        """Convert MM/DD/YYYY to YYYY-MM-DD for MySQL; pass through if already ISO."""
+        from datetime import datetime
+        for fmt in ('%m/%d/%Y', '%Y-%m-%d'):
+            try:
+                return datetime.strptime(s, fmt).strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+        return s
+
     conditions = []
     params     = []
 
     if date_from:
         conditions.append('cl.changed_at >= %s')
-        params.append(date_from + ' 00:00:00')
+        params.append(_to_sql_date(date_from) + ' 00:00:00')
     if date_to:
         conditions.append('cl.changed_at <= %s')
-        params.append(date_to + ' 23:59:59')
+        params.append(_to_sql_date(date_to) + ' 23:59:59')
     if callsign:
         conditions.append('cl.changed_by = %s')
         params.append(callsign)
