@@ -18,6 +18,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * Initialize "RX same as TX" checkbox.
+ * Hides #rx-section when checked and clears its inputs;
+ * shows it when unchecked. Auto-detects initial state from existing values.
+ */
+function initRxSameAsTx() {
+    const cb      = document.getElementById('rx_same_as_tx');
+    const section = document.getElementById('rx-section');
+    if (!cb || !section) return;
+    const inputs = section.querySelectorAll('input');
+
+    const hasData = Array.from(inputs).some(el => el.value.trim() !== '');
+    cb.checked = !hasData;
+    section.classList.toggle('d-none', !hasData);
+
+    cb.addEventListener('change', function () {
+        if (this.checked) {
+            section.classList.add('d-none');
+            inputs.forEach(el => { el.value = ''; });
+        } else {
+            section.classList.remove('d-none');
+        }
+    });
+}
+
+/**
  * Attach zip-code city/state autofill to the given field IDs.
  * Only fills city/state if city is currently empty (won't override FCC lookup).
  * If multiple city/state results exist, renders clickable suggestions.

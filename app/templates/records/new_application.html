@@ -289,52 +289,64 @@
         <input name="ant_comment" type="text" class="form-control">
       </div>
 
-      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">RX Site (leave blank if same as TX)</h6></div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">RX Latitude</label>
-        <input id="rx_lat" name="rx_lat" type="text" class="form-control">
+      <div class="col-12">
+        <hr class="border-secondary">
+        <div class="d-flex align-items-center gap-3">
+          <h6 class="text-secondary mb-0">RX Site / Antenna</h6>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="rx_same_as_tx">
+            <label class="form-check-label text-secondary small" for="rx_same_as_tx">Same as TX</label>
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">RX Longitude</label>
-        <input id="rx_lng" name="rx_lng" type="text" class="form-control">
-      </div>
-
-      <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">RX Antenna</h6></div>
-      <div class="col-md-4">
-        <label class="form-label text-secondary small">Type</label>
-        <input name="ant_type_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label text-secondary small">Gain (dBd)</label>
-        <input name="ant_gain_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label text-secondary small">HAGL (ft)</label>
-        <input name="ant_ahag_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">Polarization</label>
-        <input name="ant_polarization_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">Feedline Loss (dB)</label>
-        <input name="fdl_loss_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">Favored Direction</label>
-        <input name="ant_favor_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">Beamwidth</label>
-        <input name="ant_beamwidth_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label text-secondary small">Front-to-Back</label>
-        <input name="ant_frontback_rx" type="text" class="form-control">
-      </div>
-      <div class="col-md-9">
-        <label class="form-label text-secondary small">Antenna Comment</label>
-        <input name="ant_comment_rx" type="text" class="form-control">
+      <div id="rx-section" class="col-12">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">RX Latitude</label>
+            <input id="rx_lat" name="rx_lat" type="text" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">RX Longitude</label>
+            <input id="rx_lng" name="rx_lng" type="text" class="form-control">
+          </div>
+          <div class="col-12"><hr class="border-secondary"><h6 class="text-secondary">RX Antenna</h6></div>
+          <div class="col-md-4">
+            <label class="form-label text-secondary small">Type</label>
+            <input name="ant_type_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-secondary small">Gain (dBd)</label>
+            <input name="ant_gain_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-secondary small">HAGL (ft)</label>
+            <input name="ant_ahag_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">Polarization</label>
+            <input name="ant_polarization_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">Feedline Loss (dB)</label>
+            <input name="fdl_loss_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">Favored Direction</label>
+            <input name="ant_favor_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">Beamwidth</label>
+            <input name="ant_beamwidth_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">Front-to-Back</label>
+            <input name="ant_frontback_rx" type="text" class="form-control">
+          </div>
+          <div class="col-md-9">
+            <label class="form-label text-secondary small">Antenna Comment</label>
+            <input name="ant_comment_rx" type="text" class="form-control">
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -527,5 +539,6 @@ document.getElementById('system_id').addEventListener('blur', function() {
     })
     .catch(() => { hint.textContent = 'Callsign of the system (may differ from your account callsign)'; });
 });
+initRxSameAsTx();
 </script>
 {% endblock %}
