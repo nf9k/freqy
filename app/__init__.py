@@ -43,9 +43,9 @@ def create_app():
             return '—'
         from datetime import datetime
         if isinstance(value, datetime):
-            return value.strftime('%m/%d/%Y %H:%M')
+            return value.strftime('%m/%d/%Y %H%M')
         try:
-            return datetime.strptime(str(value), '%Y-%m-%d %H:%M:%S').strftime('%m/%d/%Y %H:%M')
+            return datetime.strptime(str(value), '%Y-%m-%d %H:%M:%S').strftime('%m/%d/%Y %H%M')
         except ValueError:
             return str(value)
 
