@@ -25,11 +25,16 @@ def reset():
     except FileNotFoundError:
         return jsonify({'success': False, 'message': 'seed.sql not found'}), 500
 
+    # Strip comment and blank lines before splitting on statement boundaries
+    clean = '\n'.join(
+        ln for ln in sql.splitlines()
+        if ln.strip() and not ln.strip().startswith('--')
+    )
     conn = get_db()
     cur  = conn.cursor()
-    for stmt in sql.split(';\n'):
-        stmt = stmt.strip().rstrip(';')
-        if stmt and not stmt.startswith('--'):
+    for stmt in clean.split(';\n'):
+        stmt = stmt.strip().rstrip(';').strip()
+        if stmt:
             cur.execute(stmt)
     conn.commit()
     cur.close()
