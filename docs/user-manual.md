@@ -92,7 +92,7 @@ The record detail page shows all information for a coordination in a tabbed layo
 - **Overview** — status, dates, system ID, access type
 - **Frequency** — output/input frequencies, bandwidth, emission designators, tone/digital access codes
 - **Site & Antenna** — TX site location with map, antenna specifications, RX site if separate
-- **System** — sponsor information
+- **Sponsor** — sponsor information
 - **Trustee** — trustee contact information
 - **Notes** — user-visible comments and changelog
 
@@ -107,6 +107,10 @@ To remove: clear the field and click **Update**.
 ### Changelog
 
 Every change to a record is logged at the bottom of the Notes tab, showing who made the change and when.
+
+### Change Notifications
+
+When an administrator edits your record, you will receive an email listing each field that changed, with the old and new values. No email is sent when you edit your own record.
 
 ---
 
@@ -123,13 +127,15 @@ The form is organized into tabs:
 - **Access / Willbe** — Open, Closed, Private, etc.
 - **Secondary Contact** — optional alternate contact callsign
 - **Equipment Ready** — check if equipment is installed and operational
+
+### Sponsor Tab
 - **Sponsor** — sponsoring organization name, abbreviation, and website
 
 ### Frequency Tab
 - **Band** *(required)* — select the frequency band; the input frequency will be calculated automatically from the standard offset for the selected band
 - **Output Freq** *(required)* — output frequency in MHz
 - **Input Freq** — auto-calculated; override if non-standard split
-- **Bandwidth** — 12.5 kHz, 20 kHz, or 25 kHz
+- **Bandwidth** — 12.5 kHz or 25 kHz
 - **Emission Designator** — FCC emission designator; common values are available in the dropdown
 - **TX Power** — transmitter power in watts
 - **ERP** — effective radiated power in watts
@@ -139,7 +145,7 @@ The form is organized into tabs:
 - **TX Site Location** — building, street, city, county, state, region
 - **Coordinates** — latitude/longitude; click the map to set, or drag the marker to adjust
 - **TX Antenna** — type, gain (dBd), HAAT, AMSL, HAGL, polarization, feedline loss, favored direction, beamwidth, front-to-back ratio
-- **RX Site** — if the receive site differs from the transmit site, enter RX coordinates and antenna data here
+- **RX Site / Antenna** — check **Same as TX** to hide this section (default). Uncheck to enter separate RX coordinates and antenna data if the receive site differs from the transmit site.
 
 ### Trustee Tab
 Trustee name, callsign, email, and phone numbers.
@@ -276,8 +282,8 @@ Administrators have access to all fields including:
 
 - **Status tab** — status, last action, audit comments, dates (orig/mod/expires), equipment ready, inherit flag
 - **Frequency tab** — all frequency and tone/digital fields
-- **Site & Antenna tab** — TX site, antenna, RX site
-- **System tab** — sponsor information
+- **Site & Antenna tab** — TX site, antenna, RX site (with "Same as TX" toggle)
+- **Sponsor tab** — sponsor information
 - **Notes tab** — user comments and audit comments
 - **Trustee tab** — trustee information
 

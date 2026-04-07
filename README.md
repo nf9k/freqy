@@ -11,11 +11,13 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Admin panel** — user management, record editing, status workflow, change review
 - **FCC ULS integration** — daily callsign database sync; auto-populates name/address on user forms; ZIP code lookup auto-fills city/state from the same local dataset
 - **Expiration notifications** — automated email reminders at 90/60/30/14/7/1 days
+- **Change notifications** — record owners receive an email summary of any changes made by an admin (self-edits excluded)
 - **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
 - **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars
 - **DB export** — admin export of all Final status records in CSV, JSON, XML, or PDF
 - **Status tooltips** — hover any status badge for a plain-language description
 - **Light/dark theme** — toggle between light and dark
+- **Date picker** — calendar date picker on all date fields
 - **Leaflet maps** — click-to-set TX site coordinates
 - **Docker-native** — single `docker compose up` deployment (`compose.yml`)
 
