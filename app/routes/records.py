@@ -292,7 +292,7 @@ def new_application():
                 %s,
                 %s,%s,%s,%s,
                 %s,%s,
-                %s,%s,%s,%s,
+                %s,%s,%s,%s,%s,
                 %s,%s,%s,
                 %s,
                 %s,%s,
