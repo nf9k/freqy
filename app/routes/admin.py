@@ -16,6 +16,77 @@ from ..db import dict_cursor, get_db
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+# Fields shown in change-notification emails (label, db_column)
+_DIFF_FIELDS = [
+    ('Description',          'subdsc'),
+    ('Status',               'status'),
+    ('Last Action',          'last_action'),
+    ('Application Type',     'app_type'),
+    ('Access',               'willbe'),
+    ('Comments',             'comments'),
+    ('RD Notes',             'rdnotes'),
+    ('RD Notes 2',           'rdnotes2'),
+    ('Band',                 'band'),
+    ('Output Freq (MHz)',    'freq_output'),
+    ('Input Freq (MHz)',     'freq_input'),
+    ('Bandwidth',            'bandwidth'),
+    ('Emission Des',         'emission_des'),
+    ('Emission Des 2',       'emission_des2'),
+    ('TX PL',                'tx_pl'),
+    ('RX PL',                'rx_pl'),
+    ('TX DCS',               'tx_dcs'),
+    ('DMR Color Code',       'dmr_cc'),
+    ('P25 NAC',              'p25_nac'),
+    ('NXDN RAN',             'nxdn_ran'),
+    ('Fusion DSQ',           'fusion_dsq'),
+    ('TX Power (W)',         'tx_power'),
+    ('TX Latitude',          'loc_lat'),
+    ('TX Longitude',         'loc_lng'),
+    ('Building',             'loc_building'),
+    ('Street',               'loc_street'),
+    ('City',                 'loc_city'),
+    ('County',               'loc_county'),
+    ('State',                'loc_state'),
+    ('Orig Date',            'orig_date'),
+    ('Mod Date',             'mod_date'),
+    ('Expires Date',         'expires_date'),
+    ('Eq Ready',             'eq_ready'),
+    ('Eq Ready Date',        'eq_ready_date'),
+    ('Antenna Type',         'ant_type'),
+    ('Ant Gain (dBd)',       'ant_gain'),
+    ('HAAT (ft)',            'ant_haat'),
+    ('AMSL (ft)',            'ant_amsl'),
+    ('AHAG (ft)',            'ant_ahag'),
+    ('Favored Dir',          'ant_favor'),
+    ('Feedline Loss (dB)',   'fdl_loss'),
+    ('RX Latitude',          'rx_lat'),
+    ('RX Longitude',         'rx_lng'),
+    ('Trustee',              'trustee_name'),
+    ('Trustee Callsign',     'trustee_callsign'),
+    ('Trustee Email',        'trustee_email'),
+]
+
+def _record_diff(old, new):
+    """Return list of (label, old_str, new_str) for changed fields."""
+    from datetime import date as _date
+    from decimal import Decimal
+
+    def _s(v):
+        if v is None:
+            return ''
+        if isinstance(v, _date):
+            return v.strftime('%m/%d/%Y')
+        if isinstance(v, Decimal):
+            return str(float(v))
+        return str(v)
+
+    changes = []
+    for label, col in _DIFF_FIELDS:
+        ov, nv = _s(old.get(col)), _s(new.get(col))
+        if ov != nv:
+            changes.append((label, ov or '(none)', nv or '(none)'))
+    return changes
+
 
 # ── Record edit ───────────────────────────────────────────────
 
@@ -58,10 +129,9 @@ def edit_record(subdir):
             except ValueError:
                 return None
 
-        # Capture old status for change notification
-        cur.execute('SELECT status, subdsc, user_id FROM coordination_records WHERE subdir = %s', (subdir,))
+        # Capture full record before update for change notification
+        cur.execute('SELECT * FROM coordination_records WHERE subdir = %s', (subdir,))
         old_rec = cur.fetchone()
-        old_status = old_rec['status'] if old_rec else None
 
         # Resolve secondary contact callsign → id
         sec_call = val('secondary_contact_callsign')
@@ -131,31 +201,36 @@ def edit_record(subdir):
         ))
         conn.commit()
 
-        # Send status-change notification if status changed
-        new_status = val('status')
-        if old_status and new_status and new_status != old_status and old_rec:
+        # Send change notification (skip self-edits)
+        if old_rec and old_rec['user_id'] != current_user.id:
             cur2 = dict_cursor(conn)
+            cur2.execute('SELECT * FROM coordination_records WHERE subdir = %s', (subdir,))
+            new_rec = cur2.fetchone()
             cur2.execute('SELECT callsign, email FROM users WHERE id = %s', (old_rec['user_id'],))
             owner = cur2.fetchone()
             cur2.close()
-            if owner and owner['email']:
-                try:
-                    desc = old_rec['subdsc'] or subdir
-                    msg = Message(
-                        subject=f'[freqy] Status update for {subdir}',
-                        recipients=[owner['email']],
-                        body=(
-                            f"Hello {owner['callsign']},\n\n"
-                            f"The status of your coordination record {subdir} ({desc}) "
-                            f"has been updated from '{old_status}' to '{new_status}'.\n\n"
-                            f"You can view your record at: "
-                            f"{url_for('records.detail', subdir=subdir, _external=True)}\n\n"
-                            f"73,\nfreqy"
-                        ),
-                    )
-                    mail.send(msg)
-                except Exception:
-                    current_app.logger.exception('Failed to send status-change email for %s', subdir)
+
+            if owner and owner['email'] and new_rec:
+                changes = _record_diff(old_rec, new_rec)
+                if changes:
+                    try:
+                        desc = new_rec['subdsc'] or subdir
+                        lines = [f'  {label:<26} {ov}  →  {nv}' for label, ov, nv in changes]
+                        msg = Message(
+                            subject=f'[freqy] Record {subdir} updated',
+                            recipients=[owner['email']],
+                            body=(
+                                f"Hello {owner['callsign']},\n\n"
+                                f"Your coordination record {subdir} ({desc}) was updated:\n\n"
+                                + '\n'.join(lines) +
+                                f"\n\nView your record: "
+                                f"{url_for('records.detail', subdir=subdir, _external=True)}\n\n"
+                                f"73,\nfreqy"
+                            ),
+                        )
+                        mail.send(msg)
+                    except Exception:
+                        current_app.logger.exception('Failed to send change email for %s', subdir)
 
         cur.close()
         conn.close()
