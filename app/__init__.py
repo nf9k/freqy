@@ -70,6 +70,9 @@ def create_app():
     login_manager.init_app(app)
     mail.init_app(app)
 
+    if app.config.get('DEMO_MODE'):
+        mail.send = lambda msg: app.logger.info('Demo mode: suppressed email to %s', msg.recipients)
+
     # Blueprints
     from .routes.auth import bp as auth_bp
     from .routes.main import bp as main_bp
