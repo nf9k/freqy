@@ -153,30 +153,30 @@ def run(daily=False):
 
     print(f'  HD records: {len(hd):,}  EN records: {len(en):,}  AM records: {len(am):,}', flush=True)
 
-    # Build merged rows: EN is the authoritative source; join HD status + AM class.
-    # Multiple USIs can share a callsign (history + active). Deduplicate by callsign,
-    # preferring Active ('A') over any other status so cancelled/expired records don't
-    # overwrite the current holder.
-    best = {}   # callsign -> row tuple
+    # Build raw rows keyed by USI, then deduplicate by callsign.
+    # EN.dat can contain multiple USI rows for the same callsign (prior holders +
+    # current holder after reassignment). Prefer status='A' (Active); among ties
+    # take the last USI seen.
+    raw = {}
     for usi, entity in en.items():
-        status = hd.get(usi, '') or None
-        cls    = am.get(usi)
-        call   = entity['callsign']
-        row = (
-            call,
-            entity['fname'],
-            entity['mi'],
-            entity['lname'],
-            entity['suffix'],
-            entity['address'],
-            entity['city'],
-            entity['state'],
-            entity['zip'],
-            cls,
-            status,
+        raw[usi] = (
+            entity['callsign'], entity['fname'], entity['mi'],
+            entity['lname'],    entity['suffix'], entity['address'],
+            entity['city'],     entity['state'],  entity['zip'],
+            am.get(usi),        hd.get(usi) or None,
         )
-        existing = best.get(call)
-        if existing is None or status == 'A' or (existing[10] != 'A' and status is not None):
+
+    # Status priority: Active > unknown/None > everything else (Expired, Cancelled, Terminated)
+    _STATUS_RANK = {'A': 2, None: 1, '': 1}
+    def _rank(status):
+        return _STATUS_RANK.get(status, 0)
+
+    best = {}   # callsign -> best row
+    for row in raw.values():
+        call   = row[0]
+        status = row[10]
+        prev   = best.get(call)
+        if prev is None or _rank(status) > _rank(prev[10]):
             best[call] = row
     rows = list(best.values())
 
@@ -199,16 +199,16 @@ def run(daily=False):
                      license_class, license_status)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 ON DUPLICATE KEY UPDATE
-                    fname   = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(fname),   fname),
-                    mi      = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(mi),      mi),
-                    lname   = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(lname),   lname),
-                    suffix  = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(suffix),  suffix),
-                    address = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(address), address),
-                    city    = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(city),    city),
-                    state   = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(state),   state),
-                    zip     = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(zip),     zip),
-                    license_class  = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(license_class),  license_class),
-                    license_status = IF(VALUES(license_status)='A' OR license_status!='A', VALUES(license_status), license_status),
+                    fname   = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(fname),   fname),
+                    mi      = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(mi),      mi),
+                    lname   = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(lname),   lname),
+                    suffix  = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(suffix),  suffix),
+                    address = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(address), address),
+                    city    = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(city),    city),
+                    state   = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(state),   state),
+                    zip     = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(zip),     zip),
+                    license_class  = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(license_class),  license_class),
+                    license_status = IF(VALUES(license_status)='A' OR VALUES(license_status) IS NULL OR license_status!='A', VALUES(license_status), license_status),
                     updated_at=CURRENT_TIMESTAMP
             ''', batch)
         else:
