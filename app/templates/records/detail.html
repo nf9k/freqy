@@ -412,7 +412,7 @@
 
     fetch(btn.dataset.sendUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ from_addr: fromEl.value })
     })
       .then(r => r.json())

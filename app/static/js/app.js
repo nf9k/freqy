@@ -1,3 +1,9 @@
+// CSRF token helper — include in all fetch() POST/PUT/DELETE calls
+function csrfHeaders(extra) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    return Object.assign({'X-CSRFToken': token}, extra || {});
+}
+
 // Initialize Flatpickr on all .datepicker fields
 document.addEventListener('DOMContentLoaded', () => {
     flatpickr('.datepicker', {
@@ -71,40 +77,33 @@ function attachZipLookup(zipId, cityId, stateId, hintId) {
                     hintEl.innerHTML = '';
                     return;
                 }
+                function makeBadge(r) {
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.className = 'badge text-bg-secondary text-decoration-none me-1';
+                    a.textContent = r.city + ', ' + r.state;
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        cityEl.value  = r.city;
+                        stateEl.value = r.state;
+                        hintEl.textContent = '';
+                    });
+                    return a;
+                }
+
                 if (cityEl.value.trim() === '') {
-                    // Auto-fill with first result
                     cityEl.value  = results[0].city;
                     stateEl.value = results[0].state;
-                    hintEl.innerHTML = '';
+                    hintEl.textContent = '';
                     if (results.length > 1) {
-                        // Show alternates as clickable badges
-                        hintEl.innerHTML = 'Other matches: ' + results.slice(1).map(r =>
-                            `<a href="#" class="badge text-bg-secondary text-decoration-none me-1 zip-alt"
-                                data-city="${r.city}" data-state="${r.state}">${r.city}, ${r.state}</a>`
-                        ).join('');
-                        hintEl.querySelectorAll('.zip-alt').forEach(el => {
-                            el.addEventListener('click', e => {
-                                e.preventDefault();
-                                cityEl.value  = el.dataset.city;
-                                stateEl.value = el.dataset.state;
-                                hintEl.innerHTML = '';
-                            });
-                        });
+                        hintEl.textContent = '';
+                        hintEl.append('Other matches: ');
+                        results.slice(1).forEach(function(r) { hintEl.append(makeBadge(r)); });
                     }
                 } else {
-                    // City already filled — show suggestions without overwriting
-                    hintEl.innerHTML = 'Suggestions: ' + results.map(r =>
-                        `<a href="#" class="badge text-bg-secondary text-decoration-none me-1 zip-alt"
-                            data-city="${r.city}" data-state="${r.state}">${r.city}, ${r.state}</a>`
-                    ).join('');
-                    hintEl.querySelectorAll('.zip-alt').forEach(el => {
-                        el.addEventListener('click', e => {
-                            e.preventDefault();
-                            cityEl.value  = el.dataset.city;
-                            stateEl.value = el.dataset.state;
-                            hintEl.innerHTML = '';
-                        });
-                    });
+                    hintEl.textContent = '';
+                    hintEl.append('Suggestions: ');
+                    results.forEach(function(r) { hintEl.append(makeBadge(r)); });
                 }
             })
             .catch(() => { if (hintEl) hintEl.innerHTML = ''; });

@@ -3,8 +3,11 @@ import os
 import urllib.parse
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-change-me')
+    SECRET_KEY = os.getenv('SECRET_KEY') or 'dev-secret-change-me'
     PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = os.getenv('APP_URL', '').startswith('https')
 
     DB_HOST     = os.getenv('DB_HOST', 'db')
     DB_NAME     = os.getenv('DB_NAME', 'freqy')

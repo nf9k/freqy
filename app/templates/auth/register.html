@@ -82,10 +82,12 @@ callsignEl.addEventListener('blur', function() {
   fetch('/callsign-lookup/' + encodeURIComponent(cs))
     .then(r => r.json())
     .then(data => {
-      if (!data.found) { badge.innerHTML = '<span class="text-warning">Not found in FCC database.</span>'; return; }
-      const statusLabel = data.license_status === 'A' ? '<span class="text-success">Active</span>'
-                        : '<span class="text-danger">' + (data.license_status || '?') + '</span>';
-      badge.innerHTML = (data.license_class || '') + ' &nbsp;' + statusLabel;
+      if (!data.found) { badge.textContent = 'Not found in FCC database.'; badge.className = 'text-warning small ms-2'; return; }
+      badge.textContent = '';
+      const sl = data.license_status === 'A' ? 'Active' : (data.license_status || '?');
+      const sc = data.license_status === 'A' ? 'text-success' : 'text-danger';
+      const sp = document.createElement('span'); sp.className = sc; sp.textContent = sl;
+      badge.append((data.license_class || '') + ' \u00a0', sp);
       // Pre-fill name and address if fields are empty
       const fills = {fname: data.fname, lname: data.lname, address: data.address, city: data.city, state: data.state, zip: data.zip};
       Object.entries(fills).forEach(([id, val]) => {

@@ -154,7 +154,10 @@ function fccLookup() {
       fccData = data;
       const sl = data.license_status === 'A' ? 'Active' : (data.license_status || '?');
       const sc = data.license_status === 'A' ? 'text-success' : 'text-danger';
-      statusEl.innerHTML = `FCC: <strong>${data.license_class || '—'}</strong> &nbsp;<span class="${sc}">${sl}</span>`;
+      statusEl.textContent = '';
+      const b = document.createElement('strong'); b.textContent = data.license_class || '—';
+      const sp = document.createElement('span'); sp.className = sc; sp.textContent = sl;
+      statusEl.append('FCC: ', b, ' \u00a0', sp);
 
       const tbody = document.getElementById('fccRows');
       tbody.innerHTML = '';
@@ -168,7 +171,10 @@ function fccLookup() {
         if (diff) hasDiff = true;
         const tr = document.createElement('tr');
         if (diff) tr.style.fontWeight = '600';
-        tr.innerHTML = `<td class="text-secondary">${f.label}</td><td>${fccVal}</td><td class="${diff ? 'text-warning' : 'text-secondary'}">${curVal || '—'}</td>`;
+        const td1 = document.createElement('td'); td1.className = 'text-secondary'; td1.textContent = f.label;
+        const td2 = document.createElement('td'); td2.textContent = fccVal;
+        const td3 = document.createElement('td'); td3.className = diff ? 'text-warning' : 'text-secondary'; td3.textContent = curVal || '—';
+        tr.append(td1, td2, td3);
         tbody.appendChild(tr);
       });
       if (hasDiff) conflictEl.classList.remove('d-none');
@@ -185,7 +191,9 @@ document.getElementById('fccApplyBtn').addEventListener('click', function() {
     if (el && val) el.value = val;
   });
   document.getElementById('fccConflict').classList.add('d-none');
-  document.getElementById('fccStatus').innerHTML += ' &nbsp;<span class="text-success"><i class="bi bi-check-circle"></i> Applied</span>';
+  const appliedSpan = document.createElement('span'); appliedSpan.className = 'text-success';
+  appliedSpan.innerHTML = ' &nbsp;<i class="bi bi-check-circle"></i> Applied';
+  document.getElementById('fccStatus').appendChild(appliedSpan);
 });
 
 // Auto-lookup on page load

@@ -56,7 +56,7 @@ def admin_required(f):
 # ---------- password helpers ----------
 
 def hash_password(password):
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 
 def check_password(password, hashed):

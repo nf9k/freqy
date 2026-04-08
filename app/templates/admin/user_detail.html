@@ -244,7 +244,10 @@ function fccLookup(callsign) {
                         : statusChar === 'T' ? 'Terminated'
                         : (statusChar || '?');
       const statusClass = statusChar === 'A' ? 'text-success' : 'text-danger';
-      statusEl.innerHTML = `FCC: <strong>${data.license_class || '—'}</strong> &nbsp;<span class="${statusClass}">${statusLabel}</span>`;
+      statusEl.textContent = '';
+      const b = document.createElement('strong'); b.textContent = data.license_class || '—';
+      const sp = document.createElement('span'); sp.className = statusClass; sp.textContent = statusLabel;
+      statusEl.append('FCC: ', b, ' \u00a0', sp);
       statusEl.className = 'small mb-2';
 
       // Build comparison rows
@@ -260,16 +263,19 @@ function fccLookup(callsign) {
         if (diff) hasDiff = true;
         const tr = document.createElement('tr');
         if (diff) tr.style.fontWeight = '600';
-        tr.innerHTML = `<td class="text-secondary">${f.label}</td>
-                        <td>${fccVal}</td>
-                        <td class="${diff ? 'text-warning' : 'text-secondary'}">${curVal || '—'}</td>`;
+        const td1 = document.createElement('td'); td1.className = 'text-secondary'; td1.textContent = f.label;
+        const td2 = document.createElement('td'); td2.textContent = fccVal;
+        const td3 = document.createElement('td'); td3.className = diff ? 'text-warning' : 'text-secondary'; td3.textContent = curVal || '—';
+        tr.append(td1, td2, td3);
         tbody.appendChild(tr);
       });
 
       if (hasDiff) {
         conflictEl.classList.remove('d-none');
       } else if (tbody.children.length > 0) {
-        statusEl.innerHTML += ' &nbsp;<span class="text-success"><i class="bi bi-check-circle"></i> Form matches FCC</span>';
+        const matchSpan = document.createElement('span'); matchSpan.className = 'text-success';
+        matchSpan.innerHTML = ' &nbsp;<i class="bi bi-check-circle"></i> Form matches FCC';
+        statusEl.appendChild(matchSpan);
       }
     })
     .catch(() => {
@@ -317,7 +323,7 @@ document.getElementById('deleteBtn')?.addEventListener('click', function() {
   if (!confirm('Permanently delete {{ user.callsign }}? This cannot be undone.')) return;
   this.disabled = true;
   const msg = document.getElementById('deleteMsg');
-  fetch('{{ url_for("admin.delete_user", user_id=user.id) }}', { method: 'POST' })
+  fetch('{{ url_for("admin.delete_user", user_id=user.id) }}', { method: 'POST', headers: csrfHeaders() })
     .then(r => r.json())
     .then(data => {
       if (data.success) {
@@ -339,7 +345,7 @@ document.getElementById('resetBtn')?.addEventListener('click', function() {
   this.disabled = true;
   const msg = document.getElementById('resetMsg');
   msg.textContent = 'Sending…';
-  fetch('{{ url_for("admin.reset_password", user_id=user.id) }}', { method: 'POST' })
+  fetch('{{ url_for("admin.reset_password", user_id=user.id) }}', { method: 'POST', headers: csrfHeaders() })
     .then(r => r.json())
     .then(data => {
       msg.textContent = data.message;

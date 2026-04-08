@@ -1,4 +1,6 @@
+import hmac
 import os
+
 from flask import Blueprint, current_app, jsonify, request, abort
 from flask_login import current_user
 
@@ -16,7 +18,7 @@ def reset():
     is_admin = current_user.is_authenticated and current_user.is_admin
     cfg_tok  = current_app.config.get('DEMO_RESET_TOKEN', '')
 
-    if not is_admin and (not cfg_tok or token != cfg_tok):
+    if not is_admin and (not cfg_tok or not hmac.compare_digest(token or '', cfg_tok)):
         abort(403)
 
     seed_path = os.path.join(current_app.root_path, '..', 'demo', 'seed.sql')

@@ -5,6 +5,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
 from flask_login import current_user, login_required, login_user
 import io
 
+from .. import limiter
 from ..auth import User, check_password
 from ..db import dict_cursor, get_db
 from ..twofa import (
@@ -31,6 +32,7 @@ bp = Blueprint('twofa', __name__, url_prefix='/2fa')
 # ---------------------------------------------------------------
 
 @bp.route('/challenge', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
 def challenge():
     user_id = session.get('pending_2fa_user_id')
     if not user_id:

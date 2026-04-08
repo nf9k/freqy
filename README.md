@@ -21,6 +21,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Light/dark theme** — toggle between light and dark
 - **Date picker** — calendar date picker on all date fields
 - **Leaflet maps** — click-to-set TX site coordinates
+- **Security hardened** — CSRF protection, rate limiting, security headers, non-root Docker container
 - **Docker-native** — single `docker compose up` deployment (`compose.yml`)
 
 ---

@@ -531,11 +531,13 @@ document.getElementById('system_id').addEventListener('blur', function() {
   fetch('/callsign-lookup/' + encodeURIComponent(cs))
     .then(r => r.json())
     .then(data => {
-      if (!data.found) { hint.innerHTML = '<span class="text-warning">Not found in FCC database.</span>'; return; }
+      if (!data.found) { hint.textContent = 'Not found in FCC database.'; hint.className = 'form-text text-warning'; return; }
+      hint.textContent = '';
       const name = [data.fname, data.lname].filter(Boolean).join(' ');
-      const sl = data.license_status === 'A' ? '<span class="text-success">Active</span>'
-               : '<span class="text-danger">' + (data.license_status || '?') + '</span>';
-      hint.innerHTML = (name ? name + ' &nbsp;·&nbsp; ' : '') + (data.license_class || '') + ' &nbsp;' + sl;
+      const sl = data.license_status === 'A' ? 'Active' : (data.license_status || '?');
+      const sc = data.license_status === 'A' ? 'text-success' : 'text-danger';
+      const sp = document.createElement('span'); sp.className = sc; sp.textContent = sl;
+      hint.append((name ? name + ' \u00b7 ' : '') + (data.license_class || '') + ' \u00a0', sp);
     })
     .catch(() => { hint.textContent = 'Callsign of the system (may differ from your account callsign)'; });
 });

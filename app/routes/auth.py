@@ -4,7 +4,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_mail import Message
 
-from .. import mail
+from .. import mail, limiter
 from ..auth import (User, check_password, hash_password, consume_reset_token,
                     create_reset_token, verify_reset_token)
 from ..db import dict_cursor, get_db
@@ -68,6 +68,7 @@ def callsign_lookup(callsign):
 
 
 @bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit('5 per minute', methods=['POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
@@ -164,6 +165,7 @@ def change_password():
 
 
 @bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
@@ -210,6 +212,7 @@ def logout():
 
 
 @bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit('3 per minute', methods=['POST'])
 def forgot_password():
     if request.method == 'POST':
         if not _verify_hcaptcha():

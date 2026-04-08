@@ -62,7 +62,7 @@ document.getElementById('registerBtn').addEventListener('click', async function(
   statusEl.textContent = 'Waiting for security key…';
 
   try {
-    const optResp = await fetch('{{ url_for("twofa.webauthn_reg_begin") }}', { method: 'POST' });
+    const optResp = await fetch('{{ url_for("twofa.webauthn_reg_begin") }}', { method: 'POST', headers: csrfHeaders() });
     const options = await optResp.json();
 
     options.challenge = b64urlDecode(options.challenge);
@@ -86,7 +86,7 @@ document.getElementById('registerBtn').addEventListener('click', async function(
 
     const verifyResp = await fetch('{{ url_for("twofa.webauthn_reg_complete") }}', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload),
     });
     const result = await verifyResp.json();

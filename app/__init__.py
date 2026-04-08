@@ -1,10 +1,15 @@
-from flask import Flask
+from flask import Flask, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
 
 from .config import Config
 
 mail = Mail()
+csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 
 def create_app():
@@ -69,9 +74,21 @@ def create_app():
     from .auth import login_manager
     login_manager.init_app(app)
     mail.init_app(app)
+    csrf.init_app(app)
+    limiter.init_app(app)
 
     if app.config.get('DEMO_MODE'):
-        mail.send = lambda msg: app.logger.info('Demo mode: suppressed email to %s', msg.recipients)
+        mail.send = lambda msg: app.logger.debug('Demo mode: suppressed email to %s', msg.recipients)
+
+    # Security headers
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        if request.is_secure:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        return response
 
     # Blueprints
     from .routes.auth import bp as auth_bp

@@ -17,11 +17,14 @@ COPY demo/ ./demo/
 COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
 
+RUN useradd -m -u 1000 appuser
+
 ARG VERSION=dev
 ENV FLASK_APP=app
 ENV PYTHONUNBUFFERED=1
 ENV _FREQY_VERSION=$VERSION
 
+USER appuser
 EXPOSE 5000
 
 ENTRYPOINT ["./entrypoint.sh"]
