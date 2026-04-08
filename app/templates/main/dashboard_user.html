@@ -6,6 +6,7 @@
   <h4 class="mb-0">My Coordination Records</h4>
   <div class="d-flex gap-2 align-items-center">
     <form method="post" action="{{ url_for('main.toggle_final_only') }}" class="m-0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-sm {{ 'btn-outline-success' if current_user.dashboard_final_only else 'btn-outline-secondary' }}"
               title="{{ 'Showing Final only — click to show all' if current_user.dashboard_final_only else 'Showing all — click to show Final only' }}">
         <i class="bi bi-funnel{{ '-fill' if current_user.dashboard_final_only else '' }}"></i>

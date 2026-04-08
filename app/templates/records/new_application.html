@@ -13,6 +13,7 @@
 </div>
 
 <form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <ul class="nav nav-tabs mb-3" id="newAppTabs">
   <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-system">System</a></li>

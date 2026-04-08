@@ -19,6 +19,7 @@
     {% endwith %}
 
     <form method="post" id="freqCheckForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       {# ── Coordinate input ── #}
       <div class="card mb-3">

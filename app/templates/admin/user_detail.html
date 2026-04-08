@@ -13,6 +13,7 @@
 <div class="row g-4">
   <div class="col-lg-7">
     <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="save_profile">
 
       <h6 class="text-secondary mb-3">Identity <span class="badge bg-warning text-dark ms-1">Admin</span></h6>

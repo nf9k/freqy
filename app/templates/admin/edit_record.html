@@ -16,6 +16,7 @@
 </div>
 
 <form method="post" action="{{ url_for('admin.edit_record', subdir=r.subdir) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <ul class="nav nav-tabs mb-3" id="editTabs">
   <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-status">Status</a></li>
