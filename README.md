@@ -45,6 +45,12 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 |---------------|-----------|----------|---------|
 | ![NOPC Decimal](docs/screenshots/nopc-dec.png) | ![NOPC DMS](docs/screenshots/nopc-dms.png) | ![NOPC Map](docs/screenshots/nopc-map.png) | ![NOPC Results](docs/screenshots/nopc-results.png) |
 
+**Send NOPC** — notify adjacent area coordinators with system/site details and ERP calculation
+
+| Button on Record | Preview & Send |
+|-----------------|----------------|
+| ![Send NOPC Button](docs/screenshots/send_nopc_on_app.png) | ![Send NOPC Window](docs/screenshots/send_nopc_window.png) |
+
 **Two-Factor Authentication** — TOTP, hardware security keys, and backup codes
 
 | Setup | TOTP | Security Key |
