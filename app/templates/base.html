@@ -28,6 +28,12 @@
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('directory.index') }}">Directory</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('directory.band_plan') }}">Band Plan</a>
+        </li>
         {% if current_user.is_admin %}
         <li class="nav-item"><span class="vr mx-2 opacity-25 d-none d-lg-block align-self-center"></span></li>
         <li class="nav-item">
@@ -42,12 +48,18 @@
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('admin.db_export') }}">DB Export</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin.activity_report') }}">Activity</a>
+        </li>
         {% endif %}
       </ul>
       <ul class="navbar-nav">
         {% if current_user.is_authenticated and current_user.is_admin %}
-        <li class="nav-item me-5">
+        <li class="nav-item me-2">
           <a class="btn btn-sm btn-success" href="{{ url_for('admin.frequency_check') }}">Coordination/NOPC Check</a>
+        </li>
+        <li class="nav-item me-5">
+          <a class="btn btn-sm btn-success" href="{{ url_for('admin.pair_suggestion') }}">Pair Finder</a>
         </li>
         {% endif %}
         <li class="nav-item me-2">

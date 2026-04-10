@@ -147,6 +147,9 @@ CREATE TABLE IF NOT EXISTS coordination_records (
     trustee_phone_cell  VARCHAR(20),
     trustee_email       VARCHAR(255),
 
+    last_activity_confirmed DATE     DEFAULT NULL,
+    activity_confirm_token  VARCHAR(64) DEFAULT NULL,
+
     created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -210,6 +213,18 @@ CREATE TABLE IF NOT EXISTS expiration_notices (
     days_threshold  SMALLINT NOT NULL,   -- 90, 60, 30, 14, 7, 1
     sent_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_record_threshold (record_id, days_threshold),
+    FOREIGN KEY (record_id) REFERENCES coordination_records(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -------------------------------------------------------
+-- Activity confirmations (use-it-or-lose-it tracking)
+-- -------------------------------------------------------
+CREATE TABLE IF NOT EXISTS activity_confirmations (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    record_id       INT          NOT NULL,
+    confirmed_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    confirmed_by    VARCHAR(10),
+    method          VARCHAR(20)  NOT NULL DEFAULT 'email',
     FOREIGN KEY (record_id) REFERENCES coordination_records(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

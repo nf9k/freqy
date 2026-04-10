@@ -87,6 +87,47 @@ Click **New Application** to submit a new coordination request.
 
 ---
 
+## Repeater Directory
+
+The **Directory** link in the navigation bar opens a searchable listing of all Final (coordinated) repeaters.
+
+**Filters:**
+
+| Filter | Description |
+|--------|-------------|
+| Search | Text search across callsign, city, frequency, description |
+| Band | Filter by frequency band |
+| Type | Filter by application type (Repeater, Link, etc.) |
+| Region | Filter by geographic region |
+| State | Filter by state (2-letter code) |
+
+**Views:**
+
+- **Table** — sortable columns (click any header to sort). Click a row to open the read-only record detail.
+- **Map** — Leaflet map with markers for all matching records. Click a marker popup for details.
+
+### CHIRP Export
+
+Click the **CHIRP Export** button on the directory page to download a CSV file compatible with CHIRP radio programming software. The export respects the current filters (band, region, etc.).
+
+Import the file into CHIRP via **File → Import** to program your radio with coordinated repeater frequencies, tones, and offsets.
+
+---
+
+## Band Plan Visualization
+
+The **Band Plan** link in the navigation bar shows a graphical spectrum display of occupied channels.
+
+1. Select a band using the buttons at the top
+2. Each vertical bar represents an occupied frequency, color-coded by status:
+   - **Green** — Final (coordinated)
+   - **Yellow** — Construction Permit
+   - **Blue** — On Hold / Audit
+3. Hover over a bar to see the record details (callsign, frequency, city, status)
+4. Click a bar to open the record detail
+
+---
+
 ## Coordination Records
 
 ### Record Detail
@@ -349,6 +390,36 @@ The **Coordination/NOPC Check** button in the top navigation bar opens the frequ
 Results include only active records (status: Final, Construction Permit, On Hold, or Audit). Each row links to the full record. A green check indicates the separation rule is met; a red X with the actual distance indicates a conflict.
 
 > **Note:** Separation distances are configurable via environment variables if your region uses different rules. `FREQ_CO_CHANNEL_MILES` accepts a JSON object keyed by band (`"50"`, `"144"`, `"222"`, `"440"`, `"902"`, `"1296"`) with the minimum co-channel separation in miles for each. `FREQ_ADJ_RULES` accepts a JSON object with the same band keys, each containing a list of `[max_offset_khz, min_separation_miles]` pairs.
+
+---
+
+### Pair Finder
+
+The **Pair Finder** button in the top navigation bar opens the frequency pair suggestion tool (admin only).
+
+**Purpose:** Find available frequency pairs for a given band and location, based on IRC coordination rules and existing coordinations.
+
+1. Select a **band** from the dropdown
+2. Enter coordinates by clicking the map or typing latitude/longitude
+3. Click **Find Pairs**
+
+Results show all standard channels for the selected band, sorted by clearance margin (cleanest first):
+
+- **Green rows** — available, passes all separation rules
+- **Red rows** — conflict with an existing coordination
+- **Clear** — no existing records nearby at all
+
+Each row shows the candidate output/input frequencies, the nearest existing record, distance, and required separation.
+
+---
+
+### Activity Report
+
+`Admin → Activity` shows Final records that have not confirmed activity within the configured interval (default: 365 days).
+
+Each row has a checkmark button to manually mark a record as confirmed (e.g., after a phone or in-person confirmation). Automated email confirmations are sent by the `send_activity_checks.py` cron script, which emails owners a one-click confirmation link.
+
+The check interval is configurable via the `ACTIVITY_CHECK_DAYS` environment variable.
 
 ---
 

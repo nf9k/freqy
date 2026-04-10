@@ -31,3 +31,34 @@ DMR_COLOR_CODES = list(range(16))
 P25_NACS = ['$001', '$293', '$492', '$F7F']
 
 WILLBE_OPTIONS = ['Open', 'Private', 'Closed', 'Limited', 'Members Only', 'Emergency Only', 'EchoLink', 'IRLP', 'AllStar']
+
+# IRC band plan — standard repeater output channels per band.
+# Each entry: list of (output_mhz, input_mhz) tuples.
+# Configurable via BAND_CHANNELS_OVERRIDE env var (JSON).
+def _gen_pairs(start, end, step, offset):
+    """Generate (output, input) pairs from start to end (inclusive) with given step and offset."""
+    pairs = []
+    f = start
+    while f <= end + 0.0001:
+        pairs.append((round(f, 4), round(f + offset, 4)))
+        f += step
+    return pairs
+
+BAND_CHANNELS = {
+    '29': _gen_pairs(29.620, 29.700, 0.020, -0.100),
+    '50': (
+        _gen_pairs(51.620, 52.000, 0.020, -0.500) +
+        _gen_pairs(53.000, 53.500, 0.020, -1.000) +
+        _gen_pairs(53.550, 54.000, 0.020, -1.000)
+    ),
+    '144': (
+        _gen_pairs(145.100, 145.500, 0.010, -0.600) +
+        _gen_pairs(146.600, 147.000, 0.015, -0.600) +
+        _gen_pairs(147.000, 147.400, 0.015, +0.600)
+    ),
+    '222': _gen_pairs(223.850, 225.000, 0.020, -1.600),
+    '440': _gen_pairs(442.000, 445.000, 0.025, -5.000),
+    '440_DV': _gen_pairs(441.525, 442.000, 0.00625, -5.000),
+    '902': _gen_pairs(927.000, 928.000, 0.0125, -25.000),
+    '1296': _gen_pairs(1290.000, 1294.000, 0.025, -20.000),
+}

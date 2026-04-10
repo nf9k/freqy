@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Pair Finder{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Pair Finder</h4>
+<p class="text-secondary small mb-3">
+  Find available frequency pairs for a given band and location based on IRC coordination rules.
+</p>
+
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Band</label>
+      <select name="band" class="form-select" required>
+        <option value="">Select band…</option>
+        {% for b in bands %}
+        <option value="{{ b }}" {% if form_data.get('band') == b %}selected{% endif %}>{{ band_labels.get(b, b) }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Latitude</label>
+      <input type="text" name="lat" id="lat" class="form-control" placeholder="e.g. 39.7684"
+             value="{{ form_data.get('lat', '') }}" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Longitude</label>
+      <input type="text" name="lon" id="lon" class="form-control" placeholder="e.g. -86.1581"
+             value="{{ form_data.get('lon', '') }}" required>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary">Find Pairs</button>
+    </div>
+  </div>
+
+  {# Map for coordinate picking #}
+  <div class="mb-3">
+    <div id="pairMap" style="height:300px; border-radius:0.375rem;"></div>
+    <div class="form-text">Click the map to set coordinates, or enter them manually above.</div>
+  </div>
+</form>
+
+{% if results %}
+<hr>
+<h5 class="mb-2">{{ band_labels.get(results.band, results.band) }} — Available Pairs</h5>
+<p class="text-secondary small">
+  {{ results.candidates|selectattr('available')|list|length }} available
+  of {{ results.candidates|length }} total channels.
+  Sorted by clearance margin (cleanest first).
+</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Output (MHz)</th>
+        <th>Input (MHz)</th>
+        <th>Status</th>
+        <th>Clearance</th>
+        <th>Nearest Record</th>
+        <th>Distance</th>
+        <th>Required</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in results.candidates %}
+      <tr class="{{ 'table-success' if c.available and c.nearest else ('table-danger' if not c.available else '') }}">
+        <td><code>{{ '%.4f'|format(c.output) }}</code></td>
+        <td><code>{{ '%.4f'|format(c.input) }}</code></td>
+        <td>
+          {% if c.nearest is none %}
+            <span class="badge bg-success">Clear</span>
+          {% elif c.available %}
+            <span class="badge bg-success">Available</span>
+          {% else %}
+            <span class="badge bg-danger">Conflict</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if c.clearance is not none %}
+            {{ '%+.1f'|format(c.clearance) }} mi
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if c.nearest %}
+            <a href="{{ url_for('records.detail', subdir=c.nearest.subdir) }}">
+              {{ c.nearest.system_id }} {{ '%.4f'|format(c.nearest.freq) }}
+            </a>
+            <span class="text-secondary small">{{ c.nearest.city }}, {{ c.nearest.state }}</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ c.nearest.distance if c.nearest else '—' }} mi</td>
+        <td>{{ c.nearest.required if c.nearest else '—' }} mi</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+  var latEl = document.getElementById('lat');
+  var lonEl = document.getElementById('lon');
+  var initLat = parseFloat(latEl.value) || 39.77;
+  var initLon = parseFloat(lonEl.value) || -86.16;
+
+  var map = L.map('pairMap').setView([initLat, initLon], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  var marker = null;
+  if (latEl.value && lonEl.value) {
+    marker = L.marker([initLat, initLon], {draggable: true}).addTo(map);
+    marker.on('dragend', function() {
+      var ll = marker.getLatLng();
+      latEl.value = ll.lat.toFixed(6);
+      lonEl.value = ll.lng.toFixed(6);
+    });
+  }
+
+  map.on('click', function(e) {
+    latEl.value = e.latlng.lat.toFixed(6);
+    lonEl.value = e.latlng.lng.toFixed(6);
+    if (marker) {
+      marker.setLatLng(e.latlng);
+    } else {
+      marker = L.marker(e.latlng, {draggable: true}).addTo(map);
+      marker.on('dragend', function() {
+        var ll = marker.getLatLng();
+        latEl.value = ll.lat.toFixed(6);
+        lonEl.value = ll.lng.toFixed(6);
+      });
+    }
+  });
+})();
+</script>
+{% endblock %}

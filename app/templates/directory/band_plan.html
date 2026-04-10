@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Band Plan{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Band Plan Visualization</h4>
+
+<div class="btn-group mb-3" id="bandSelector">
+  {% for band, label in band_labels.items() %}
+  {% if band != 'GHZ' %}
+  <button type="button" class="btn btn-sm btn-outline-primary" data-band="{{ band }}">{{ label }}</button>
+  {% endif %}
+  {% endfor %}
+  <button type="button" class="btn btn-sm btn-outline-primary" data-band="902">902</button>
+  <button type="button" class="btn btn-sm btn-outline-primary" data-band="1296">1296</button>
+</div>
+
+<div class="d-flex gap-3 mb-2 small text-secondary">
+  <span><span style="display:inline-block;width:12px;height:12px;background:var(--bs-success);border-radius:2px;"></span> Final</span>
+  <span><span style="display:inline-block;width:12px;height:12px;background:var(--bs-warning);border-radius:2px;"></span> Construction Permit</span>
+  <span><span style="display:inline-block;width:12px;height:12px;background:var(--bs-info);border-radius:2px;"></span> On Hold / Audit</span>
+</div>
+
+<div id="bandPlanContainer" class="border rounded p-3 bg-body-tertiary" style="min-height:200px;">
+  <p class="text-secondary text-center mt-5">Select a band above to view the spectrum.</p>
+</div>
+
+<div id="bandPlanInfo" class="small text-secondary mt-2"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/bandplan.js') }}"></script>
+<script>
+(function() {
+  var activeBtn = null;
+  document.getElementById('bandSelector').addEventListener('click', function(e) {
+    var btn = e.target.closest('button[data-band]');
+    if (!btn) return;
+    if (activeBtn) activeBtn.classList.replace('btn-primary', 'btn-outline-primary');
+    btn.classList.replace('btn-outline-primary', 'btn-primary');
+    activeBtn = btn;
+    var band = btn.dataset.band;
+    var container = document.getElementById('bandPlanContainer');
+    var info = document.getElementById('bandPlanInfo');
+    container.innerHTML = '<p class="text-secondary text-center mt-5">Loading...</p>';
+
+    fetch('/directory/api/band-plan/' + band)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        container.innerHTML = '';
+        renderBandPlan(container, data);
+        info.textContent = data.channels.length + ' record' + (data.channels.length !== 1 ? 's' : '') +
+          ' in ' + data.range[0].toFixed(1) + '–' + data.range[1].toFixed(1) + ' MHz';
+      })
+      .catch(function() {
+        container.innerHTML = '<p class="text-danger text-center mt-5">Failed to load band data.</p>';
+      });
+  });
+})();
+</script>
+{% endblock %}

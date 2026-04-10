@@ -47,6 +47,8 @@ class Config:
 
     EXPORT_TITLE = os.getenv('EXPORT_TITLE', 'Frequency Coordination Database Export as of {date}')
 
+    ACTIVITY_CHECK_DAYS = int(os.getenv('ACTIVITY_CHECK_DAYS', '365'))
+
     DEMO_MODE         = os.getenv('DEMO_MODE', 'false').lower() == 'true'
     DEMO_RESET_TOKEN  = os.getenv('DEMO_RESET_TOKEN', '')
 

@@ -14,6 +14,11 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Change notifications** — record owners receive an email summary of any changes made by an admin (self-edits excluded)
 - **Two-factor authentication** — optional TOTP (Google Authenticator, Authy, etc.), YubiKey/FIDO2 security keys, and backup codes
 - **Coordination/NOPC check** — admin tool to check co-channel and adjacent-channel separation against existing records per IRC Coordination Policy v1.1; configurable separation rules via env vars
+- **Repeater directory** — searchable, filterable listing of all coordinated repeaters with Leaflet map view
+- **CHIRP export** — downloadable CSV compatible with CHIRP radio programming software
+- **Pair finder** — admin tool to find available frequency pairs for a given band and location
+- **Band plan visualization** — SVG spectrum display showing occupied channels per band
+- **Activity reporting** — periodic use-it-or-lose-it check-in system with one-click email confirmation
 - **Send NOPC** — admin button on record detail to email adjacent area coordinators with system/site details and ERP calculation
 - **DB export** — admin export of all Final status records in CSV, JSON, XML, or PDF
 - **Status tooltips** — hover any status badge for a plain-language description
@@ -158,6 +163,7 @@ All configuration is via `.env`. See `.env.example` for all options.
 | `FREQ_ADJ_RULES` | Adjacent channel rules as JSON (see `.env.example` for format) |
 | `NOPC_EMAIL_TO` | Comma-separated adjacent area coordinator emails for NOPC notifications |
 | `NOPC_EMAIL_FROM` | Comma-separated sender addresses (shown as dropdown on Send NOPC form) |
+| `ACTIVITY_CHECK_DAYS` | Days between activity confirmation emails (default: 365) |
 | `EXPORT_TITLE` | Title line included in all DB exports; `{date}` is replaced with today's date |
 | `HCAPTCHA_SITE_KEY` / `HCAPTCHA_SECRET_KEY` | hCaptcha keys for login, register, and password reset; omit to disable |
 

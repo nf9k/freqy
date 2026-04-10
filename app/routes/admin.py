@@ -11,7 +11,7 @@ from flask_mail import Message
 
 from .. import mail
 from ..auth import admin_required, create_reset_token, hash_password
-from ..constants import STATUSES, APP_TYPES, BANDS, BAND_LABELS, REGIONS, CTCSS_TONES, DCS_CODES, DMR_COLOR_CODES, P25_NACS, WILLBE_OPTIONS
+from ..constants import STATUSES, APP_TYPES, BANDS, BAND_LABELS, REGIONS, CTCSS_TONES, DCS_CODES, DMR_COLOR_CODES, P25_NACS, WILLBE_OPTIONS, BAND_CHANNELS
 from ..db import dict_cursor, get_db
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -974,3 +974,172 @@ def frequency_check():
         }
 
     return render_template('admin/frequency_check.html', results=results, form_data=form_data)
+
+
+# ── Pair suggestion (inverse of frequency check) ─────────────
+
+@bp.route('/pair-suggestion', methods=['GET', 'POST'])
+@admin_required
+def pair_suggestion():
+    results = None
+    form_data = {}
+
+    if request.method == 'POST':
+        band = request.form.get('band', '')
+        lat = request.form.get('lat', type=float)
+        lon = request.form.get('lon', type=float)
+        form_data = {'band': band, 'lat': lat, 'lon': lon}
+
+        if not lat or not lon:
+            flash('Coordinates are required.', 'danger')
+            return render_template('admin/pair_suggestion.html', results=None,
+                                   form_data=form_data, bands=BANDS, band_labels=BAND_LABELS)
+
+        # Get channels for selected band (combine FM + DV for 440)
+        channels = list(BAND_CHANNELS.get(band, []))
+        if band == '440':
+            channels += BAND_CHANNELS.get('440_DV', [])
+        if not channels:
+            flash('No channel plan defined for this band.', 'danger')
+            return render_template('admin/pair_suggestion.html', results=None,
+                                   form_data=form_data, bands=BANDS, band_labels=BAND_LABELS)
+
+        # One DB query — all active records in this band's frequency range
+        all_outputs = [c[0] for c in channels]
+        freq_min = min(all_outputs) - 0.1
+        freq_max = max(all_outputs) + 0.1
+
+        conn = get_db()
+        cur = dict_cursor(conn)
+        cur.execute('''
+            SELECT r.subdir, r.system_id, r.subdsc, r.freq_output,
+                   r.loc_lat, r.loc_lng, r.loc_city, r.loc_state,
+                   u.callsign AS owner
+            FROM coordination_records r
+            JOIN users u ON u.id = r.user_id
+            WHERE r.freq_output BETWEEN %s AND %s
+              AND r.loc_lat IS NOT NULL AND r.loc_lng IS NOT NULL
+              AND r.status IN ('Final', 'Construction Permit', 'On Hold', 'Audit')
+        ''', (freq_min, freq_max))
+        existing = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        adj_rules = _get_adj_rules()
+        co_miles = _get_co_channel_miles(_rules_key(channels[0][0]) or band)
+
+        candidates = []
+        for output, inp in channels:
+            band_key = _rules_key(output)
+            if not band_key:
+                continue
+            band_adj = adj_rules.get(band_key, [])
+
+            min_clearance = None
+            nearest = None
+
+            for rec in existing:
+                rec_freq = float(rec['freq_output'])
+                rec_lat = float(rec['loc_lat'])
+                rec_lng = float(rec['loc_lng'])
+                dist = _haversine_miles(lat, lon, rec_lat, rec_lng)
+                offset_khz = abs(output - rec_freq) * 1000
+
+                # Determine required separation
+                if offset_khz < 0.1:
+                    required = co_miles
+                else:
+                    rule = _adj_rule(band_adj, offset_khz)
+                    if rule:
+                        required = rule[1]
+                    else:
+                        continue  # outside adjacent window
+
+                clearance = dist - required
+                if min_clearance is None or clearance < min_clearance:
+                    min_clearance = clearance
+                    nearest = {
+                        'subdir': rec['subdir'],
+                        'system_id': rec['system_id'],
+                        'freq': rec_freq,
+                        'city': rec['loc_city'] or '',
+                        'state': rec['loc_state'] or '',
+                        'distance': round(dist, 1),
+                        'required': required,
+                    }
+
+            candidates.append({
+                'output': output,
+                'input': inp,
+                'clearance': round(min_clearance, 1) if min_clearance is not None else None,
+                'nearest': nearest,
+                'available': min_clearance is None or min_clearance >= 0,
+            })
+
+        # Sort: available first, then by clearance descending (cleanest first)
+        candidates.sort(key=lambda c: (not c['available'], -(c['clearance'] or 9999)))
+        results = {
+            'candidates': candidates,
+            'band': band,
+            'lat': lat,
+            'lon': lon,
+        }
+
+    return render_template('admin/pair_suggestion.html', results=results,
+                           form_data=form_data, bands=BANDS, band_labels=BAND_LABELS)
+
+
+# ── Activity report ──────────────────────────────────────────
+
+@bp.route('/activity-report')
+@admin_required
+def activity_report():
+    check_days = current_app.config.get('ACTIVITY_CHECK_DAYS', 365)
+    conn = get_db()
+    cur = dict_cursor(conn)
+    cur.execute('''
+        SELECT r.subdir, r.subdsc, r.system_id, u.callsign AS owner,
+               r.loc_city, r.loc_state, r.band,
+               r.last_activity_confirmed, r.expires_date
+        FROM coordination_records r
+        JOIN users u ON u.id = r.user_id
+        WHERE r.status = 'Final'
+          AND (r.last_activity_confirmed IS NULL
+               OR r.last_activity_confirmed < DATE_SUB(CURDATE(), INTERVAL %s DAY))
+        ORDER BY r.last_activity_confirmed ASC, r.subdir
+    ''', (check_days,))
+    records = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return render_template('admin/activity_report.html',
+                           records=records, check_days=check_days, band_labels=BAND_LABELS)
+
+
+@bp.route('/activity-report/mark', methods=['POST'])
+@admin_required
+def activity_mark():
+    subdir = request.form.get('subdir', '')
+    conn = get_db()
+    cur = dict_cursor(conn)
+    cur.execute('''
+        UPDATE coordination_records
+        SET last_activity_confirmed = CURDATE(), activity_confirm_token = NULL
+        WHERE subdir = %s AND status = 'Final'
+    ''', (subdir,))
+    if cur.rowcount:
+        cur.execute('''
+            SELECT id FROM coordination_records WHERE subdir = %s
+        ''', (subdir,))
+        rec = cur.fetchone()
+        if rec:
+            cur.execute('''
+                INSERT INTO activity_confirmations (record_id, confirmed_by, method)
+                VALUES (%s, %s, 'admin')
+            ''', (rec['id'], current_user.callsign))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    flash(f'Record {subdir} marked as confirmed.', 'success')
+    return redirect(url_for('admin.activity_report'))

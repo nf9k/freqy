@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}{{ r.subdir }} — {{ r.subdsc }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-1">
+      <code class="text-secondary fs-6">{{ r.subdir }}</code>
+      {{ r.subdsc }}
+    </h4>
+    <span class="badge bg-success">Final</span>
+    <span class="badge bg-dark border border-secondary">{{ r.app_type }}</span>
+  </div>
+  <a href="{{ url_for('directory.index') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Directory
+  </a>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-freq">Frequency</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-site">Site & Antenna</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-system">System</a></li>
+</ul>
+
+<div class="tab-content">
+
+  {# ── Frequency tab ── #}
+  <div class="tab-pane fade show active" id="tab-freq">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <table class="table table-sm table-borderless">
+          <tbody>
+            <tr><th class="text-secondary w-50">Band</th><td>{{ band_labels.get(r.band, r.band) }}</td></tr>
+            <tr><th class="text-secondary">Output</th><td>{{ r.freq_output }} MHz</td></tr>
+            <tr><th class="text-secondary">Input</th><td>{{ r.freq_input }} MHz</td></tr>
+            <tr><th class="text-secondary">Bandwidth</th><td>{{ r.bandwidth or '—' }}</td></tr>
+            <tr><th class="text-secondary">Emission</th><td>{{ r.emission_des or '—' }}</td></tr>
+            <tr><th class="text-secondary">TX Power</th><td>{{ r.tx_power or '—' }} W</td></tr>
+            <tr><th class="text-secondary">Access</th><td>{{ r.willbe or '—' }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-md-6">
+        <h6 class="text-secondary mb-2">Tone / Digital</h6>
+        <table class="table table-sm table-borderless">
+          <tbody>
+            <tr><th class="text-secondary w-50">TX CTCSS</th><td>{{ r.tx_pl or '—' }}</td></tr>
+            <tr><th class="text-secondary">RX CTCSS</th><td>{{ r.rx_pl or '—' }}</td></tr>
+            <tr><th class="text-secondary">TX DCS</th><td>{{ r.tx_dcs or '—' }}</td></tr>
+            <tr><th class="text-secondary">DMR CC</th><td>{{ r.dmr_cc if r.dmr_cc is not none else '—' }}</td></tr>
+            <tr><th class="text-secondary">P25 NAC</th><td>{{ r.p25_nac or '—' }}</td></tr>
+            <tr><th class="text-secondary">NXDN RAN</th><td>{{ r.nxdn_ran or '—' }}</td></tr>
+            <tr><th class="text-secondary">Fusion DSQ</th><td>{{ r.fusion_dsq or '—' }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% if r.rdnotes or r.rdnotes2 %}
+    <p class="text-secondary small mt-1">
+      Directory notes: <code>{{ r.rdnotes or '' }}{% if r.rdnotes2 %} {{ r.rdnotes2 }}{% endif %}</code>
+    </p>
+    {% endif %}
+  </div>
+
+  {# ── Site & Antenna tab ── #}
+  <div class="tab-pane fade" id="tab-site">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <h6 class="text-secondary mb-2">TX Site Location</h6>
+        <table class="table table-sm table-borderless">
+          <tbody>
+            <tr><th class="text-secondary w-40">Building</th><td>{{ r.loc_building or '—' }}</td></tr>
+            <tr><th class="text-secondary">Street</th><td>{{ r.loc_street or '—' }}</td></tr>
+            <tr><th class="text-secondary">City</th><td>{{ r.loc_city or '—' }}{% if r.loc_county %}, {{ r.loc_county }} Co.{% endif %}</td></tr>
+            <tr><th class="text-secondary">State</th><td>{{ r.loc_state or '—' }}</td></tr>
+            {% if r.loc_lat %}
+            <tr><th class="text-secondary">Coordinates</th>
+              <td><a href="https://www.openstreetmap.org/?mlat={{ r.loc_lat }}&mlon={{ r.loc_lng }}&zoom=14"
+                     target="_blank" rel="noopener">
+                {{ '%.6f'|format(r.loc_lat) }}, {{ '%.6f'|format(r.loc_lng) }}
+              </a></td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+
+        <h6 class="text-secondary mb-2 mt-3">TX Antenna</h6>
+        <table class="table table-sm table-borderless">
+          <tbody>
+            <tr><th class="text-secondary w-40">Type / Gain</th><td>{{ r.ant_type or '—' }} / {{ r.ant_gain or '—' }} dBd</td></tr>
+            <tr><th class="text-secondary">HAAT</th><td>{{ r.ant_haat or '—' }} ft</td></tr>
+            <tr><th class="text-secondary">AMSL</th><td>{{ r.ant_amsl or '—' }} ft</td></tr>
+            <tr><th class="text-secondary">HAGL</th><td>{{ r.ant_ahag or '—' }} ft</td></tr>
+            <tr><th class="text-secondary">Polarization</th><td>{{ r.ant_polarization or '—' }}</td></tr>
+            {% if r.ant_favor %}<tr><th class="text-secondary">Favored dir.</th><td>{{ r.ant_favor }}</td></tr>{% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ── System tab ── #}
+  <div class="tab-pane fade" id="tab-system">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <table class="table table-sm table-borderless">
+          <tbody>
+            <tr><th class="text-secondary w-50">System ID</th><td>{{ r.system_id or '—' }}</td></tr>
+            <tr><th class="text-secondary">Owner</th><td>{{ r.owner }}</td></tr>
+            <tr><th class="text-secondary">Type</th><td>{{ r.app_type }}</td></tr>
+            <tr><th class="text-secondary">Access</th><td>{{ r.willbe or '—' }}</td></tr>
+            <tr><th class="text-secondary">Original Date</th><td>{{ r.orig_date|date }}</td></tr>
+            <tr><th class="text-secondary">Last Modified</th><td>{{ r.mod_date|date }}</td></tr>
+            <tr><th class="text-secondary">Expires</th><td>{{ r.expires_date|date if r.expires_date else 'N/A' }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% if r.comments %}
+    <h6 class="text-secondary mb-2 mt-3">Comments</h6>
+    <p class="font-monospace small">{{ r.comments }}</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

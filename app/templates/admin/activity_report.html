@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Activity Report{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Activity Report</h4>
+  <span class="badge bg-secondary">Check interval: {{ check_days }} days</span>
+</div>
+
+<p class="text-secondary small mb-3">
+  Final records that have not confirmed activity within the last {{ check_days }} days.
+  {{ records|length }} record{{ 's' if records|length != 1 else '' }} pending confirmation.
+</p>
+
+{% if records %}
+<div class="table-responsive">
+  <table class="table table-hover table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Record</th>
+        <th>System ID</th>
+        <th>Owner</th>
+        <th>Description</th>
+        <th>Band</th>
+        <th>City</th>
+        <th>Last Confirmed</th>
+        <th>Expires</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td><a href="{{ url_for('records.detail', subdir=r.subdir) }}"><code>{{ r.subdir }}</code></a></td>
+        <td>{{ r.system_id or '—' }}</td>
+        <td>{{ r.owner }}</td>
+        <td class="text-truncate" style="max-width:15rem;">{{ r.subdsc }}</td>
+        <td>{{ band_labels.get(r.band, r.band) }}</td>
+        <td>{{ r.loc_city or '' }}{% if r.loc_state %}, {{ r.loc_state }}{% endif %}</td>
+        <td>
+          {% if r.last_activity_confirmed %}
+            {{ r.last_activity_confirmed|date }}
+          {% else %}
+            <span class="text-danger">Never</span>
+          {% endif %}
+        </td>
+        <td>{{ r.expires_date|date if r.expires_date else '—' }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.activity_mark') }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="subdir" value="{{ r.subdir }}">
+            <button type="submit" class="btn btn-sm btn-outline-success" title="Mark as confirmed">
+              <i class="bi bi-check-lg"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-success"><i class="bi bi-check-circle"></i> All Final records have confirmed activity.</p>
+{% endif %}
+
+{% endblock %}
