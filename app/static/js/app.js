@@ -109,3 +109,40 @@ function attachZipLookup(zipId, cityId, stateId, hintId) {
             .catch(() => { if (hintEl) hintEl.innerHTML = ''; });
     });
 }
+
+/**
+ * IRC Policy 8.2.7 — flag default/prohibited digital access codes.
+ * Shows a yellow note below the field when a prohibited value is selected.
+ * Auto-attaches to any form containing these fields.
+ */
+(function() {
+    var rules = [
+        { name: 'dmr_cc',    prohibited: ['1'],    label: 'DMR Color Code 1 is a default code' },
+        { name: 'p25_nac',   prohibited: ['$293', '$F7E', '$F7F'], label: 'This P25 NAC is a default/all-access code' },
+        { name: 'nxdn_ran',  prohibited: ['0'],    label: 'NXDN RAN 0 is a default code' },
+        { name: 'fusion_dsq', prohibited: ['0'],   label: 'Fusion DSQ 0 is a default code' },
+    ];
+    var policyRef = 'Per IRC Policy 8.2.7, default codes shall not be assigned to new coordinations.';
+
+    rules.forEach(function(rule) {
+        var el = document.querySelector('[name="' + rule.name + '"]');
+        if (!el) return;
+
+        var note = document.createElement('div');
+        note.className = 'form-text text-warning small d-none';
+        note.textContent = rule.label + '. ' + policyRef;
+        el.parentNode.appendChild(note);
+
+        function check() {
+            var val = el.value.trim();
+            if (val && rule.prohibited.indexOf(val) !== -1) {
+                note.classList.remove('d-none');
+            } else {
+                note.classList.add('d-none');
+            }
+        }
+        el.addEventListener('change', check);
+        el.addEventListener('input', check);
+        check();
+    });
+})();
