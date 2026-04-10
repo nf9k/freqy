@@ -27,7 +27,34 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Date picker** — calendar date picker on all date fields
 - **Leaflet maps** — click-to-set TX site coordinates
 - **Security hardened** — CSRF protection, rate limiting, security headers, non-root Docker container
+- **IRC Policy compliance** — separation rules, band plan channels, and default digital code warnings per IRC Coordination Policy v1.1
 - **Docker-native** — single `docker compose up` deployment (`compose.yml`)
+
+### Feature Access by Role
+
+| Feature | Guest | User | Admin |
+|---------|:-----:|:----:|:-----:|
+| Login / Register | Yes | — | — |
+| Dashboard (own records) | — | Yes | ✓ |
+| Dashboard Final Only filter | — | Yes | ✓ |
+| Submit new application | — | Yes | ✓ |
+| Edit own records | — | Yes | ✓ |
+| Profile / password / 2FA | — | Yes | ✓ |
+| Repeater directory + map | — | Yes | ✓ |
+| CHIRP export | — | Yes | ✓ |
+| Band plan visualization | — | Yes | ✓ |
+| View any record (directory) | — | Yes | ✓ |
+| Light/dark theme | Yes | ✓ | Yes |
+| Applications list | — | — | Yes |
+| User management | — | — | Yes |
+| Edit any record | — | — | Yes |
+| Review changes | — | — | Yes |
+| DB export (CSV/JSON/XML/PDF) | — | — | Yes |
+| Coordination/NOPC check | — | — | Yes |
+| Pair finder | — | — | Yes |
+| Send NOPC | — | — | Yes |
+| Activity report | — | — | Yes |
+| Status changes | — | — | Yes |
 
 ---
 

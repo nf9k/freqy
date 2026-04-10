@@ -40,6 +40,29 @@ freqy is a web-based frequency coordination management system for amateur radio 
 - Manage your account profile and secondary contacts
 - Administrators can manage all records and users across the system
 
+### Feature Access by Role
+
+| Feature | User | Admin |
+|---------|:----:|:-----:|
+| Dashboard (own records) | Yes | ✓ |
+| Dashboard Final Only filter | Yes | ✓ |
+| Submit new application | Yes | ✓ |
+| Edit own records | Yes | ✓ |
+| Profile / password / 2FA | Yes | ✓ |
+| Repeater directory + map | Yes | ✓ |
+| CHIRP export | Yes | ✓ |
+| Band plan visualization | Yes | ✓ |
+| Applications list | — | Yes |
+| User management | — | Yes |
+| Edit any record | — | Yes |
+| Review changes | — | Yes |
+| DB export (CSV/JSON/XML/PDF) | — | Yes |
+| Coordination/NOPC check | — | Yes |
+| Pair finder | — | Yes |
+| Send NOPC | — | Yes |
+| Activity report | — | Yes |
+| Status changes | — | Yes |
+
 ---
 
 ## Getting Started
@@ -403,13 +426,16 @@ The **Pair Finder** button in the top navigation bar opens the frequency pair su
 2. Enter coordinates by clicking the map or typing latitude/longitude
 3. Click **Find Pairs**
 
-Results show all standard channels for the selected band, sorted by clearance margin (cleanest first):
+Results show all standard channels for the selected band per the IRC band plan, sorted by clearance margin (cleanest first):
 
-- **Green rows** — available, passes all separation rules
-- **Red rows** — conflict with an existing coordination
-- **Clear** — no existing records nearby at all
+- **Occupied** (red) — frequency is already coordinated
+- **Conflict** (yellow) — adjacent channel separation rule violated
+- **Available** (green) — passes all co-channel and adjacent separation rules
+- **Clear** (green) — no nearby records at all
 
-Each row shows the candidate output/input frequencies, the nearest existing record, distance, and required separation.
+Each row shows the candidate output/input frequencies, the nearest existing record, distance, and required separation. All separation distances follow IRC Coordination Policy v1.1 Section 7.
+
+> **Note:** The 902 MHz band correctly excludes the 927.075–927.125 simplex segment from candidate pairs.
 
 ---
 
@@ -502,6 +528,27 @@ On profile and admin user edit forms, entering a ZIP code and tabbing out will a
 | 222 | 222 | -1.600 MHz |
 | 440 | 440 | ±5.000 MHz (below/above 445.000) |
 | GHZ | 902/1240 | — |
+
+---
+
+## IRC Policy Compliance
+
+freqy enforces and references IRC Coordination Policy v1.1 in the following areas:
+
+**Geographical separation** (Section 7) — the Coordination/NOPC Check and Pair Finder tools apply the official co-channel (120 miles all bands) and adjacent channel separation rules per the policy table.
+
+**Band plan channels** (Section 6) — the Pair Finder generates candidate frequencies only within IRC-designated repeater output sub-bands, with correct channel spacing and offsets per band.
+
+**Default digital codes** (Section 8.2.7) — when entering digital access codes on the new application or record edit forms, a yellow advisory note appears if a prohibited default code is selected:
+
+| Code Type | Prohibited Values |
+|-----------|------------------|
+| DMR Color Code | 1 |
+| P25 NAC | $293, $F7E, $F7F |
+| NXDN RAN | 0 |
+| Fusion DSQ | 0 |
+
+These warnings are advisory only and do not prevent saving.
 
 ---
 
