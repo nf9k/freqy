@@ -1037,6 +1037,7 @@ def pair_suggestion():
 
             min_clearance = None
             nearest = None
+            occupied = False
 
             for rec in existing:
                 rec_freq = float(rec['freq_output'])
@@ -1045,8 +1046,9 @@ def pair_suggestion():
                 dist = _haversine_miles(lat, lon, rec_lat, rec_lng)
                 offset_khz = abs(output - rec_freq) * 1000
 
-                # Determine required separation
+                # Exact co-channel match = occupied
                 if offset_khz < 0.1:
+                    occupied = True
                     required = co_miles
                 else:
                     rule = _adj_rule(band_adj, offset_khz)
@@ -1073,7 +1075,8 @@ def pair_suggestion():
                 'input': inp,
                 'clearance': round(min_clearance, 1) if min_clearance is not None else None,
                 'nearest': nearest,
-                'available': min_clearance is None or min_clearance >= 0,
+                'available': not occupied and (min_clearance is None or min_clearance >= 0),
+                'occupied': occupied,
             })
 
         # Sort: available first, then by clearance descending (cleanest first)

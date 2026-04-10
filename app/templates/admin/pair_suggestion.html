@@ -68,16 +68,18 @@
     </thead>
     <tbody>
       {% for c in results.candidates %}
-      <tr class="{{ 'table-success' if c.available and c.nearest else ('table-danger' if not c.available else '') }}">
+      <tr class="{{ 'table-danger' if c.occupied else ('table-success' if c.available and c.nearest else ('table-warning' if not c.available else '')) }}">
         <td><code>{{ '%.4f'|format(c.output) }}</code></td>
         <td><code>{{ '%.4f'|format(c.input) }}</code></td>
         <td>
-          {% if c.nearest is none %}
+          {% if c.occupied %}
+            <span class="badge bg-danger">Occupied</span>
+          {% elif c.nearest is none %}
             <span class="badge bg-success">Clear</span>
           {% elif c.available %}
             <span class="badge bg-success">Available</span>
           {% else %}
-            <span class="badge bg-danger">Conflict</span>
+            <span class="badge bg-warning text-dark">Conflict</span>
           {% endif %}
         </td>
         <td>
