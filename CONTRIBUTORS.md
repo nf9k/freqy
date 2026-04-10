@@ -1,6 +1,6 @@
 # Contributors & Acknowledgments
 
-freqy is developed by [NF9K](https://github.com/nf9k) with gratitude to the following individuals whose ideas, feedback, and testing have shaped the system.
+freqy is developed by [NF9K](https://www.nf9k.net) with gratitude to the following individuals whose ideas, feedback, and testing have shaped the system.
 
 ---
 

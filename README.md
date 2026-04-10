@@ -199,4 +199,4 @@ GPLv3 — see [LICENSE](LICENSE).
 
 ---
 
-*freqy by NF9K*
+*freqy by [NF9K](https://www.nf9k.net)*
