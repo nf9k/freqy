@@ -543,5 +543,7 @@ document.getElementById('system_id').addEventListener('blur', function() {
     .catch(() => { hint.textContent = 'Callsign of the system (may differ from your account callsign)'; });
 });
 initRxSameAsTx();
+attachDmsToggle('loc_lat', 'loc_lng');
+attachDmsToggle('rx_lat', 'rx_lng');
 </script>
 {% endblock %}

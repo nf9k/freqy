@@ -21,26 +21,44 @@
     <input type="text" name="q" class="form-control form-control-sm" placeholder="Search..."
            value="{{ filters.get('q', '') }}" style="width:14rem;">
   </div>
-  <div class="col-auto">
-    <select name="band" class="form-select form-select-sm" multiple size="3" title="Hold Ctrl/Cmd to select multiple">
+  <div class="col-auto dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+      Band {% if filters.getlist('band') %}<span class="badge bg-primary">{{ filters.getlist('band')|length }}</span>{% endif %}
+    </button>
+    <div class="dropdown-menu p-2" style="min-width:8rem;">
       {% for b in bands %}
-      <option value="{{ b }}" {% if b in filters.getlist('band') %}selected{% endif %}>{{ band_labels.get(b, b) }}</option>
+      <label class="dropdown-item d-flex align-items-center gap-2 py-1">
+        <input type="checkbox" name="band" value="{{ b }}" {% if b in filters.getlist('band') %}checked{% endif %}>
+        {{ band_labels.get(b, b) }}
+      </label>
       {% endfor %}
-    </select>
+    </div>
   </div>
-  <div class="col-auto">
-    <select name="type" class="form-select form-select-sm" multiple size="3" title="Hold Ctrl/Cmd to select multiple">
+  <div class="col-auto dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+      Type {% if filters.getlist('type') %}<span class="badge bg-primary">{{ filters.getlist('type')|length }}</span>{% endif %}
+    </button>
+    <div class="dropdown-menu p-2" style="min-width:8rem;">
       {% for t in app_types %}
-      <option value="{{ t }}" {% if t in filters.getlist('type') %}selected{% endif %}>{{ t }}</option>
+      <label class="dropdown-item d-flex align-items-center gap-2 py-1">
+        <input type="checkbox" name="type" value="{{ t }}" {% if t in filters.getlist('type') %}checked{% endif %}>
+        {{ t }}
+      </label>
       {% endfor %}
-    </select>
+    </div>
   </div>
-  <div class="col-auto">
-    <select name="region" class="form-select form-select-sm" multiple size="3" title="Hold Ctrl/Cmd to select multiple">
+  <div class="col-auto dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+      Region {% if filters.getlist('region') %}<span class="badge bg-primary">{{ filters.getlist('region')|length }}</span>{% endif %}
+    </button>
+    <div class="dropdown-menu p-2" style="min-width:6rem;">
       {% for r in regions %}
-      <option value="{{ r }}" {% if r in filters.getlist('region') %}selected{% endif %}>{{ r }}</option>
+      <label class="dropdown-item d-flex align-items-center gap-2 py-1">
+        <input type="checkbox" name="region" value="{{ r }}" {% if r in filters.getlist('region') %}checked{% endif %}>
+        {{ r }}
+      </label>
       {% endfor %}
-    </select>
+    </div>
   </div>
   <div class="col-auto">
     <input type="text" name="state" class="form-control form-control-sm text-uppercase"
