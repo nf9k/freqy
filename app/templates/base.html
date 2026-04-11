@@ -122,7 +122,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-patch-check-fill text-success"></i> Licensed</h5>
+        <h5 class="modal-title"><i class="bi bi-patch-check-fill text-success"></i> Registered with Gratitude</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -135,7 +135,7 @@
         {% endif %}
       </div>
       <div class="modal-footer">
-        <span class="text-secondary small me-auto">Issued: {{ license.issued_at }}</span>
+        <span class="text-secondary small me-auto">Issued: {{ license.issued_at[5:7] }}/{{ license.issued_at[8:10] }}/{{ license.issued_at[:4] }}</span>
         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </div>

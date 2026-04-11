@@ -22,26 +22,23 @@
            value="{{ filters.get('q', '') }}" style="width:14rem;">
   </div>
   <div class="col-auto">
-    <select name="band" class="form-select form-select-sm">
-      <option value="">All Bands</option>
+    <select name="band" class="form-select form-select-sm" multiple size="3" title="Hold Ctrl/Cmd to select multiple">
       {% for b in bands %}
-      <option value="{{ b }}" {% if filters.get('band') == b %}selected{% endif %}>{{ band_labels.get(b, b) }}</option>
+      <option value="{{ b }}" {% if b in filters.getlist('band') %}selected{% endif %}>{{ band_labels.get(b, b) }}</option>
       {% endfor %}
     </select>
   </div>
   <div class="col-auto">
-    <select name="type" class="form-select form-select-sm">
-      <option value="">All Types</option>
+    <select name="type" class="form-select form-select-sm" multiple size="3" title="Hold Ctrl/Cmd to select multiple">
       {% for t in app_types %}
-      <option value="{{ t }}" {% if filters.get('type') == t %}selected{% endif %}>{{ t }}</option>
+      <option value="{{ t }}" {% if t in filters.getlist('type') %}selected{% endif %}>{{ t }}</option>
       {% endfor %}
     </select>
   </div>
   <div class="col-auto">
-    <select name="region" class="form-select form-select-sm">
-      <option value="">All Regions</option>
+    <select name="region" class="form-select form-select-sm" multiple size="3" title="Hold Ctrl/Cmd to select multiple">
       {% for r in regions %}
-      <option value="{{ r }}" {% if filters.get('region') == r %}selected{% endif %}>{{ r }}</option>
+      <option value="{{ r }}" {% if r in filters.getlist('region') %}selected{% endif %}>{{ r }}</option>
       {% endfor %}
     </select>
   </div>

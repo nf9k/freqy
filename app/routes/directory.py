@@ -32,20 +32,23 @@ def _build_query(params):
     clauses = ["r.status = 'Final'"]
     values = []
 
-    band = params.get('band', '')
-    if band and band in BANDS:
-        clauses.append('r.band = %s')
-        values.append(band)
+    bands = params.getlist('band')
+    bands = [b for b in bands if b in BANDS]
+    if bands:
+        clauses.append('r.band IN (' + ','.join(['%s'] * len(bands)) + ')')
+        values.extend(bands)
 
-    app_type = params.get('type', '')
-    if app_type and app_type in APP_TYPES:
-        clauses.append('r.app_type = %s')
-        values.append(app_type)
+    types = params.getlist('type')
+    types = [t for t in types if t in APP_TYPES]
+    if types:
+        clauses.append('r.app_type IN (' + ','.join(['%s'] * len(types)) + ')')
+        values.extend(types)
 
-    region = params.get('region', '')
-    if region and region in REGIONS:
-        clauses.append('r.loc_region = %s')
-        values.append(region)
+    regions = params.getlist('region')
+    regions = [r for r in regions if r in REGIONS]
+    if regions:
+        clauses.append('r.loc_region IN (' + ','.join(['%s'] * len(regions)) + ')')
+        values.extend(regions)
 
     state = params.get('state', '')
     if state:

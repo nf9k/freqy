@@ -73,13 +73,13 @@
         <td><code>{{ '%.4f'|format(c.input) }}</code></td>
         <td>
           {% if c.occupied %}
-            <span class="badge bg-danger">Occupied</span>
+            <span class="badge bg-danger" data-bs-toggle="tooltip" title="This frequency is already coordinated to an active record">Occupied</span>
           {% elif c.nearest is none %}
             <span class="badge bg-success">Clear</span>
           {% elif c.available %}
             <span class="badge bg-success">Available</span>
           {% else %}
-            <span class="badge bg-warning text-dark">Conflict</span>
+            <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" title="Adjacent channel separation does not meet IRC Policy v1.1 Section 7 minimum distance">Policy Conflict</span>
           {% endif %}
         </td>
         <td>
