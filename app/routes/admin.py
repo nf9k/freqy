@@ -986,9 +986,9 @@ def pair_suggestion():
 
     if request.method == 'POST':
         band = request.form.get('band', '')
-        lat = request.form.get('lat', type=float)
-        lon = request.form.get('lon', type=float)
-        form_data = {'band': band, 'lat': lat, 'lon': lon}
+        lat = request.form.get('coord_lat', type=float)
+        lon = request.form.get('coord_lon', type=float)
+        form_data = {**request.form, 'band': band, 'coord_lat': lat, 'coord_lon': lon}
 
         if not lat or not lon:
             flash('Coordinates are required.', 'danger')
@@ -1101,11 +1101,11 @@ def distance_calc():
     form_data = {}
 
     if request.method == 'POST':
-        lat1 = request.form.get('lat1', type=float)
-        lon1 = request.form.get('lon1', type=float)
-        lat2 = request.form.get('lat2', type=float)
-        lon2 = request.form.get('lon2', type=float)
-        form_data = {'lat1': lat1, 'lon1': lon1, 'lat2': lat2, 'lon2': lon2}
+        lat1 = request.form.get('a_lat', type=float)
+        lon1 = request.form.get('a_lon', type=float)
+        lat2 = request.form.get('b_lat', type=float)
+        lon2 = request.form.get('b_lon', type=float)
+        form_data = {**request.form, 'a_lat': lat1, 'a_lon': lon1, 'b_lat': lat2, 'b_lon': lon2}
 
         if lat1 is not None and lon1 is not None and lat2 is not None and lon2 is not None:
             miles = _haversine_miles(lat1, lon1, lat2, lon2)

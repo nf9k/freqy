@@ -1,0 +1,106 @@
+{#
+  Reusable coordinate input: Decimal / DMS / Map picker.
+
+  Parameters (set before {% include %}):
+    prefix   — unique prefix for field IDs (e.g. 'a', 'b', 'coord')
+    label    — heading label (e.g. 'Site Coordinates', 'Point A')
+    lat_val  — initial latitude value (decimal) or ''
+    lon_val  — initial longitude value (decimal) or ''
+    map_id   — unique map div ID (e.g. 'mapA')
+    form_data — request.form or similar dict for repopulating DMS fields
+#}
+<div class="card mb-3">
+  <div class="card-header py-2">
+    <div class="d-flex align-items-center gap-3">
+      <strong class="small">{{ label }}</strong>
+      <div class="btn-group btn-group-sm" role="group">
+        <input type="radio" class="btn-check coord-mode-radio" name="{{ prefix }}_coord_mode" id="{{ prefix }}_mode_decimal" value="decimal"
+               data-prefix="{{ prefix }}" checked>
+        <label class="btn btn-outline-secondary" for="{{ prefix }}_mode_decimal">Decimal</label>
+        <input type="radio" class="btn-check coord-mode-radio" name="{{ prefix }}_coord_mode" id="{{ prefix }}_mode_dms" value="dms"
+               data-prefix="{{ prefix }}">
+        <label class="btn btn-outline-secondary" for="{{ prefix }}_mode_dms">DMS</label>
+        <input type="radio" class="btn-check coord-mode-radio" name="{{ prefix }}_coord_mode" id="{{ prefix }}_mode_map" value="map"
+               data-prefix="{{ prefix }}">
+        <label class="btn btn-outline-secondary" for="{{ prefix }}_mode_map">Map</label>
+      </div>
+    </div>
+  </div>
+  <div class="card-body pb-2">
+
+    {# Decimal #}
+    <div id="{{ prefix }}_panel_decimal" class="coord-panel-{{ prefix }}">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label small">Latitude (decimal °N)</label>
+          <input id="{{ prefix }}_lat_dec" type="text" class="form-control" placeholder="39.768403"
+                 value="{{ lat_val }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small">Longitude (decimal °, negative W)</label>
+          <input id="{{ prefix }}_lon_dec" type="text" class="form-control" placeholder="-86.158068"
+                 value="{{ lon_val }}">
+        </div>
+      </div>
+    </div>
+
+    {# DMS #}
+    <div id="{{ prefix }}_panel_dms" class="coord-panel-{{ prefix }} d-none">
+      <div class="row g-2 align-items-end">
+        <div class="col-auto">
+          <label class="form-label small">Latitude</label>
+          <div class="input-group input-group-sm">
+            <input name="{{ prefix }}_lat_d" type="number" class="form-control" style="width:4rem" placeholder="39"
+                   value="{{ form_data.get(prefix + '_lat_d', '') }}">
+            <span class="input-group-text">°</span>
+            <input name="{{ prefix }}_lat_m" type="number" class="form-control" style="width:4rem" placeholder="46"
+                   value="{{ form_data.get(prefix + '_lat_m', '') }}">
+            <span class="input-group-text">′</span>
+            <input name="{{ prefix }}_lat_s" type="number" step="0.01" class="form-control" style="width:5rem" placeholder="06.25"
+                   value="{{ form_data.get(prefix + '_lat_s', '') }}">
+            <span class="input-group-text">″</span>
+            <select name="{{ prefix }}_lat_dir" class="form-select" style="width:4rem">
+              <option value="N" {% if form_data.get(prefix + '_lat_dir','N')=='N' %}selected{% endif %}>N</option>
+              <option value="S" {% if form_data.get(prefix + '_lat_dir')=='S' %}selected{% endif %}>S</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-auto">
+          <label class="form-label small">Longitude</label>
+          <div class="input-group input-group-sm">
+            <input name="{{ prefix }}_lon_d" type="number" class="form-control" style="width:4rem" placeholder="86"
+                   value="{{ form_data.get(prefix + '_lon_d', '') }}">
+            <span class="input-group-text">°</span>
+            <input name="{{ prefix }}_lon_m" type="number" class="form-control" style="width:4rem" placeholder="09"
+                   value="{{ form_data.get(prefix + '_lon_m', '') }}">
+            <span class="input-group-text">′</span>
+            <input name="{{ prefix }}_lon_s" type="number" step="0.01" class="form-control" style="width:5rem" placeholder="29.05"
+                   value="{{ form_data.get(prefix + '_lon_s', '') }}">
+            <span class="input-group-text">″</span>
+            <select name="{{ prefix }}_lon_dir" class="form-select" style="width:4rem">
+              <option value="W" {% if form_data.get(prefix + '_lon_dir','W')=='W' %}selected{% endif %}>W</option>
+              <option value="E" {% if form_data.get(prefix + '_lon_dir')=='E' %}selected{% endif %}>E</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Map #}
+    <div id="{{ prefix }}_panel_map" class="coord-panel-{{ prefix }} d-none">
+      <div id="{{ map_id }}" style="height:280px; border-radius:6px;" class="mb-2"></div>
+      <div class="form-text text-secondary mb-2">Click map to set coordinates. Drag marker to adjust.</div>
+      <div class="row g-2">
+        <div class="col-md-6">
+          <input id="{{ prefix }}_map_lat" type="text" class="form-control form-control-sm" readonly placeholder="click map">
+        </div>
+        <div class="col-md-6">
+          <input id="{{ prefix }}_map_lon" type="text" class="form-control form-control-sm" readonly placeholder="click map">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<input type="hidden" name="{{ prefix }}_lat" id="{{ prefix }}_hidden_lat" value="{{ lat_val }}">
+<input type="hidden" name="{{ prefix }}_lon" id="{{ prefix }}_hidden_lon" value="{{ lon_val }}">
