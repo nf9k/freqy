@@ -62,12 +62,17 @@ def create_app():
         return f'{value:.{places}f}'
 
     import os
+    from .license import verify_license
+    _license = verify_license()
+
     @app.context_processor
     def inject_globals():
+        ver = os.environ.get('_FREQY_VERSION', 'dev')
         return {
-            'app_version':       os.environ.get('APP_VERSION', 'dev'),
+            'app_version':       ver + ('+' if _license else ''),
             'hcaptcha_site_key': app.config.get('HCAPTCHA_SITE_KEY', ''),
             'demo_mode':         app.config.get('DEMO_MODE', False),
+            'license':           _license,
         }
 
     # Extensions
