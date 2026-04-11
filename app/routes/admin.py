@@ -1092,6 +1092,28 @@ def pair_suggestion():
                            form_data=form_data, bands=BANDS, band_labels=BAND_LABELS)
 
 
+# ── Distance calculator ──────────────────────────────────────
+
+@bp.route('/distance', methods=['GET', 'POST'])
+@admin_required
+def distance_calc():
+    result = None
+    form_data = {}
+
+    if request.method == 'POST':
+        lat1 = request.form.get('lat1', type=float)
+        lon1 = request.form.get('lon1', type=float)
+        lat2 = request.form.get('lat2', type=float)
+        lon2 = request.form.get('lon2', type=float)
+        form_data = {'lat1': lat1, 'lon1': lon1, 'lat2': lat2, 'lon2': lon2}
+
+        if lat1 is not None and lon1 is not None and lat2 is not None and lon2 is not None:
+            miles = _haversine_miles(lat1, lon1, lat2, lon2)
+            result = {'miles': round(miles, 2), 'km': round(miles * 1.60934, 2)}
+
+    return render_template('admin/distance.html', result=result, form_data=form_data)
+
+
 # ── Activity report ──────────────────────────────────────────
 
 @bp.route('/activity-report')

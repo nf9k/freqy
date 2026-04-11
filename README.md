@@ -17,6 +17,8 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Repeater directory** — searchable, filterable listing of all coordinated repeaters with Leaflet map view
 - **CHIRP export** — downloadable CSV compatible with CHIRP radio programming software
 - **Pair finder** — admin tool to find available frequency pairs for a given band and location
+- **Distance calculator** — great circle distance between two points with interactive map
+- **Linked records** — parent/child record grouping for linked repeater systems
 - **Band plan visualization** — SVG spectrum display showing occupied channels per band
 - **Activity reporting** — periodic use-it-or-lose-it check-in system with one-click email confirmation
 - **Send NOPC** — admin button on record detail to email adjacent area coordinators with system/site details and ERP calculation
@@ -25,7 +27,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 - **Dashboard filter** — user preference to show only Final records on the dashboard
 - **Light/dark theme** — toggle between light and dark
 - **Date picker** — calendar date picker on all date fields
-- **Leaflet maps** — click-to-set TX site coordinates
+- **Leaflet maps** — click-to-set TX site coordinates, inline maps on record detail (TX + RX sites)
 - **Security hardened** — CSRF protection, rate limiting, security headers, non-root Docker container
 - **IRC Policy compliance** — separation rules, band plan channels, and default digital code warnings per IRC Coordination Policy v1.1
 - **Docker-native** — single `docker compose up` deployment (`compose.yml`)
@@ -52,6 +54,7 @@ A modern, self-hosted web application for amateur radio frequency coordination. 
 | DB export (CSV/JSON/XML/PDF) | — | — | Yes |
 | Coordination/NOPC check | — | — | Yes |
 | Pair finder | — | — | Yes |
+| Distance calculator | — | — | Yes |
 | Send NOPC | — | — | Yes |
 | Activity report | — | — | Yes |
 | Status changes | — | — | Yes |

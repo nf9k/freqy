@@ -55,11 +55,15 @@
       </ul>
       <ul class="navbar-nav">
         {% if current_user.is_authenticated and current_user.is_admin %}
-        <li class="nav-item me-2">
-          <a class="btn btn-sm btn-success" href="{{ url_for('admin.frequency_check') }}">Coordination/NOPC Check</a>
-        </li>
-        <li class="nav-item me-5">
-          <a class="btn btn-sm btn-success" href="{{ url_for('admin.pair_suggestion') }}">Pair Finder</a>
+        <li class="nav-item dropdown me-5">
+          <button class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-tools"></i> Tools
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('admin.frequency_check') }}">Coordination/NOPC Check</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.pair_suggestion') }}">Pair Finder</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.distance_calc') }}">Distance Calculator</a></li>
+          </ul>
         </li>
         {% endif %}
         <li class="nav-item me-2">

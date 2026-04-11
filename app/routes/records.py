@@ -37,6 +37,25 @@ def detail(subdir):
         )
         secondary = cur.fetchone()
 
+    # Linked records (children of this record, or siblings if this has a parent)
+    linked = []
+    if record['id']:
+        cur.execute('''
+            SELECT subdir, subdsc, freq_output, band, status, app_type
+            FROM coordination_records
+            WHERE parent_record_id = %s AND id != %s
+            ORDER BY freq_output
+        ''', (record['id'], record['id']))
+        linked = cur.fetchall()
+    if not linked and record.get('parent_record_id'):
+        cur.execute('''
+            SELECT subdir, subdsc, freq_output, band, status, app_type
+            FROM coordination_records
+            WHERE (parent_record_id = %s OR id = %s) AND id != %s
+            ORDER BY freq_output
+        ''', (record['parent_record_id'], record['parent_record_id'], record['id']))
+        linked = cur.fetchall()
+
     # Changelog
     cur.execute(
         '''SELECT changed_by, changed_at, summary
@@ -48,7 +67,8 @@ def detail(subdir):
 
     cur.close()
     conn.close()
-    return render_template('records/detail.html', r=record, changelog=changelog, secondary=secondary)
+    return render_template('records/detail.html', r=record, changelog=changelog,
+                           secondary=secondary, linked=linked)
 
 
 # ── User record edit ──────────────────────────────────────────

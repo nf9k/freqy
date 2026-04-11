@@ -59,6 +59,7 @@ freqy is a web-based frequency coordination management system for amateur radio 
 | DB export (CSV/JSON/XML/PDF) | — | Yes |
 | Coordination/NOPC check | — | Yes |
 | Pair finder | — | Yes |
+| Distance calculator | — | Yes |
 | Send NOPC | — | Yes |
 | Activity report | — | Yes |
 | Status changes | — | Yes |
@@ -159,9 +160,10 @@ The record detail page shows all information for a coordination in a tabbed layo
 
 - **Overview** — status, dates, system ID, access type
 - **Frequency** — output/input frequencies, bandwidth, emission designators, tone/digital access codes
-- **Site & Antenna** — TX site location with map, antenna specifications, RX site if separate
+- **Site & Antenna** — TX site location with inline Leaflet map, antenna specifications, RX site if separate (shown as second marker on map)
 - **Sponsor** — sponsor information
 - **Trustee** — trustee contact information
+- **Linked Records** — if this record has child records (e.g., links, control receivers) or siblings under the same parent, they are listed with clickable links
 - **Notes** — user-visible comments and changelog
 
 ### Secondary Contact
@@ -436,6 +438,20 @@ Results show all standard channels for the selected band per the IRC band plan, 
 Each row shows the candidate output/input frequencies, the nearest existing record, distance, and required separation. All separation distances follow IRC Coordination Policy v1.1 Section 7.
 
 > **Note:** The 902 MHz band correctly excludes the 927.075–927.125 simplex segment from candidate pairs.
+
+---
+
+### Distance Calculator
+
+`Admin → Tools → Distance Calculator` computes the great circle (Haversine) distance between two points.
+
+1. Click the map to set **Point A** (blue marker), click again for **Point B** (red marker)
+2. Or enter coordinates manually in the four fields
+3. Click **Calculate Distance**
+
+The result shows the distance in both miles and kilometers. A dashed green line connects the two points on the map. Click the map again to reset and start over.
+
+This is useful when evaluating repeater move requests or checking separation distances by hand.
 
 ---
 
