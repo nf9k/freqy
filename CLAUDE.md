@@ -199,7 +199,7 @@ When shipping a feature:
 2. Commit everything together (code + docs in one commit, or docs as immediate follow-up)
 3. Build: `docker build --build-arg VERSION=X.XX -t nf9k/freqy:X.XX -t nf9k/freqy:latest .`
 4. Push: `docker push nf9k/freqy:X.XX && docker push nf9k/freqy:latest`
-5. Deploy: `ssh root@docker-core "cd /docker/arcane/data/projects/freqy && docker compose pull web && docker compose up -d web"`
+5. Deploy: `ssh user@YOUR_SERVER "cd /path/to/freqy && docker compose pull web && docker compose up -d web"`
 
 Use `compose.yml`, not `docker-compose.yml`.
 

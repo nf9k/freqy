@@ -14,7 +14,7 @@ All notable changes to freqy are documented here.
 - **Coordination/NOPC Check** tool: admin-only frequency conflict checker with co-channel and adjacent-channel separation rules (Haversine distance)
 - Co-channel and adjacent-channel separation rules configurable via `FREQ_CO_CHANNEL_MILES` and `FREQ_ADJ_RULES` env vars
 - DNS readiness loop in `fcc-import` container startup to handle network attachment race condition
-- Sandbox reset script on docker-core: nightly cron pulls fresh Flexweb data, purges non-admin DB records, re-imports
+- Sandbox reset script on production server: nightly cron pulls fresh Flexweb data, purges non-admin DB records, re-imports
 
 ### Changed
 - App renamed from **freqy-database** to **freqy** throughout (Docker project, volumes, directory)

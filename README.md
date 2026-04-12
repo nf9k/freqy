@@ -235,4 +235,4 @@ GPLv3 — see [LICENSE](LICENSE).
 
 ---
 
-*freqy by [NF9K](https://www.nf9k.net)*
+*freqy by [NF9K](https://www.nf9k.net)* | [Tip Jar](https://ko-fi.com/nf9k) — 50% goes to the Indiana Repeater Council
