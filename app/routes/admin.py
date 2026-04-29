@@ -1325,6 +1325,11 @@ def coverage_status():
 @bp.route('/coverage/generate/<int:record_id>', methods=['POST'])
 @admin_required
 def coverage_generate(record_id):
+    app = current_app._get_current_object()
+    with _batch_lock:
+        if _batch_db_get(app)['running']:
+            return jsonify({'success': False, 'message': 'A batch is already running — wait for it to complete'}), 409
+
     conn = get_db()
     cur  = dict_cursor(conn)
     cur.execute("""
@@ -1340,26 +1345,11 @@ def coverage_generate(record_id):
     if not rec:
         return jsonify({'success': False, 'message': 'Record not found or missing coordinates/frequency'}), 404
 
-    app = current_app._get_current_object()
-    threading.Thread(target=_do_generate, args=(app, rec), daemon=True).start()
+    _batch_db_update(app, running=1, total=1, done=0, errors=0,
+                     current_subdir=rec['subdir'], started_at=datetime.utcnow(), finished_at=None)
+    threading.Thread(target=_batch_worker, args=(app, [rec]), daemon=True).start()
     return jsonify({'success': True, 'queued': True})
 
-
-@bp.route('/coverage/record_status/<int:record_id>')
-@admin_required
-def coverage_record_status(record_id):
-    conn = get_db()
-    cur  = dict_cursor(conn)
-    cur.execute("""
-        SELECT generated_at, error FROM coverage_plots WHERE record_id = %s
-    """, (record_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        return jsonify({'state': 'pending'})
-    if row['error']:
-        return jsonify({'state': 'error', 'message': row['error']})
-    return jsonify({'state': 'done'})
 
 
 @bp.route('/coverage/batch', methods=['POST'])

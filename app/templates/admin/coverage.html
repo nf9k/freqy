@@ -264,36 +264,18 @@ function generateOne(recordId, btn) {
   .then(r => r.json())
   .then(d => {
     if (d.success) {
-      pollRecord(recordId, btn);
+      document.getElementById('batchProgress').classList.remove('d-none');
+      pollBatch();
     } else {
-      document.getElementById('plotStatus-' + recordId).innerHTML =
-        `<span class="text-danger small" title="${d.message}"><i class="bi bi-x-circle-fill"></i> Error</span>`;
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+      document.getElementById('batchMsg').textContent = d.message;
     }
   })
   .catch(() => {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
   });
-}
-
-function pollRecord(recordId, btn) {
-  fetch(`/admin/coverage/record_status/${recordId}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.state === 'pending') {
-        setTimeout(() => pollRecord(recordId, btn), 3000);
-      } else if (d.state === 'done') {
-        location.reload();
-      } else {
-        document.getElementById('plotStatus-' + recordId).innerHTML =
-          `<span class="text-danger small" title="${d.message}"><i class="bi bi-x-circle-fill"></i> Error</span>`;
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
-      }
-    })
-    .catch(() => setTimeout(() => pollRecord(recordId, btn), 3000));
 }
 </script>
 {% endblock %}
