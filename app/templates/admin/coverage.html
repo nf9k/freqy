@@ -81,15 +81,21 @@
             <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width:0%"></div>
           </div>
           <div id="progressText" class="small text-secondary"></div>
+          <div id="progressQueue" class="small text-secondary mt-1"></div>
         </div>
       </div>
     </div>
 
     {# ── Records table ── #}
     <div class="card">
-      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <strong>Records with TX Coordinates</strong>
-        <span class="text-secondary small">Records missing lat/lng or frequency are excluded</span>
+        <div class="d-flex align-items-center gap-2">
+          <span id="searchCount" class="text-secondary small"></span>
+          <input type="search" id="recordSearch" class="form-control form-control-sm"
+                 style="width:220px" placeholder="Search subdir, callsign, freq…"
+                 oninput="filterRecords(this.value)">
+        </div>
       </div>
       <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">
@@ -103,9 +109,10 @@
               <th class="text-end">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="recordsTbody">
             {% for r in records %}
-            <tr id="row-{{ r.id }}">
+            <tr id="row-{{ r.id }}"
+                data-search="{{ r.subdir }} {{ r.system_id or '' }} {{ '%.4f' % r.freq_output }}">
               <td>
                 <a href="{{ url_for('records.detail', subdir=r.subdir) }}" target="_blank">{{ r.subdir }}</a>
               </td>
@@ -153,13 +160,39 @@
 
 {% block scripts %}
 <script>
-const CSRF = '{{ csrf_token() }}';
+const CSRF    = '{{ csrf_token() }}';
+const AVG_SECS = {{ avg_secs or 0 }};
+const TOTAL_ROWS = {{ records | length }};
 
 {% if batch.running %}
 document.getElementById('batchProgress').classList.remove('d-none');
 pollBatch();
 {% endif %}
 
+// ── Search ────────────────────────────────────────────────────
+function filterRecords(q) {
+  const term = q.trim().toLowerCase();
+  const rows = document.querySelectorAll('#recordsTbody tr');
+  let shown = 0;
+  rows.forEach(row => {
+    const match = !term || row.dataset.search.toLowerCase().includes(term);
+    row.classList.toggle('d-none', !match);
+    if (match) shown++;
+  });
+  const el = document.getElementById('searchCount');
+  el.textContent = term ? `${shown} of ${TOTAL_ROWS}` : '';
+}
+
+// ── ETA formatting ────────────────────────────────────────────
+function fmtEta(secs) {
+  if (secs < 60)  return `~${secs}s`;
+  const m = Math.round(secs / 60);
+  if (m < 60) return `~${m}m`;
+  const h = Math.floor(m / 60), rm = m % 60;
+  return rm ? `~${h}h ${rm}m` : `~${h}h`;
+}
+
+// ── Batch ─────────────────────────────────────────────────────
 function startBatch() {
   const n = parseInt(document.getElementById('batchSize').value) || 10;
   document.getElementById('batchBtn').disabled = true;
@@ -194,19 +227,32 @@ function pollBatch() {
     .then(d => {
       const pct = d.total ? Math.round(d.done / d.total * 100) : 0;
       document.getElementById('progressBar').style.width = pct + '%';
+
       if (d.running) {
+        const remaining  = d.total - d.done - d.errors;
+        const inQueue    = Math.max(0, remaining - 1);
+        const etaSecs    = AVG_SECS ? remaining * AVG_SECS : null;
+        const etaStr     = etaSecs ? ` · ${fmtEta(etaSecs)} remaining` : '';
+
         document.getElementById('progressText').textContent =
           `Processing ${d.current || '…'} — ${d.done} of ${d.total} done, ${d.errors} errors`;
+        document.getElementById('progressQueue').textContent =
+          inQueue > 0
+            ? `${inQueue} in queue${etaStr}`
+            : (etaSecs ? `In progress${etaStr}` : 'In progress');
+
         _pollTimer = setTimeout(pollBatch, 2000);
       } else {
         document.getElementById('progressText').textContent =
           `Batch complete — ${d.done} generated, ${d.errors} errors`;
+        document.getElementById('progressQueue').textContent = '';
         document.getElementById('batchBtn').disabled = false;
         if (d.done > 0 || d.errors > 0) setTimeout(() => location.reload(), 1000);
       }
     });
 }
 
+// ── Single-record generate ────────────────────────────────────
 function generateOne(recordId, btn) {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
