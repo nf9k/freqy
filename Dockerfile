@@ -17,7 +17,7 @@ COPY demo/ ./demo/
 COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
 
-RUN useradd -m -u 1000 appuser
+RUN useradd -m -u 1000 appuser && mkdir -p /data/kmz && chown appuser /data/kmz
 
 ARG VERSION=dev
 ENV FLASK_APP=app

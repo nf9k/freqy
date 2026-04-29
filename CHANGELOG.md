@@ -5,6 +5,7 @@ All notable changes to freqy are documented here.
 ## [Unreleased]
 
 ### Added
+- **Coverage Plots** tool: admin-only interface to generate KMZ signal coverage plots via an external Signal Server. Supports per-record generation, batch queue with live progress bar, and KMZ download. Configurable via `SIGNAL_SERVER_URL` and `KMZ_DIR` env vars.
 - Status badge tooltips with plain-language descriptions for all coordination statuses
 - Version footer displaying `freqy vX.XX by NF9K` (centered, bottom of page)
 - `CONTRIBUTORS.md` crediting K9MMQ for the status tooltip suggestion

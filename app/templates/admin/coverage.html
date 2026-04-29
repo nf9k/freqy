@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Coverage Plots{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-10">
+
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <h4 class="mb-0"><i class="bi bi-map"></i> Coverage Plots</h4>
+    </div>
+
+    {# ── Stats ── #}
+    {% set plot_count  = records | selectattr('generated_at') | selectattr('error', 'none') | list | length %}
+    {% set error_count = records | selectattr('error') | list | length %}
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card text-center">
+          <div class="card-body py-2">
+            <div class="fs-4 fw-bold">{{ records | length }}</div>
+            <div class="text-secondary small">Eligible Records</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center border-success">
+          <div class="card-body py-2">
+            <div class="fs-4 fw-bold text-success">{{ plot_count }}</div>
+            <div class="text-secondary small">Have Plots</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center {% if error_count %}border-danger{% endif %}">
+          <div class="card-body py-2">
+            <div class="fs-4 fw-bold {% if error_count %}text-danger{% endif %}">{{ error_count }}</div>
+            <div class="text-secondary small">Failed</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center">
+          <div class="card-body py-2">
+            <div class="fs-4 fw-bold">{{ pending_count }}</div>
+            <div class="text-secondary small">Pending</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Batch controls ── #}
+    <div class="card mb-4">
+      <div class="card-header py-2"><strong>Batch Generation</strong></div>
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="input-group" style="width:130px">
+            <span class="input-group-text small">Next</span>
+            <input type="number" id="batchSize" value="10" min="1" max="200"
+                   class="form-control text-center">
+          </div>
+          <button id="batchBtn" class="btn btn-primary" onclick="startBatch()"
+                  {% if batch.running %}disabled{% endif %}>
+            <i class="bi bi-play-fill"></i> Generate
+          </button>
+          <div id="batchMsg" class="text-secondary small"></div>
+        </div>
+
+        <div id="batchProgress" class="mt-3 {% if not batch.running %}d-none{% endif %}">
+          <div class="progress mb-1" style="height:8px">
+            <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width:0%"></div>
+          </div>
+          <div id="progressText" class="small text-secondary"></div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Records table ── #}
+    <div class="card">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <strong>Records with TX Coordinates</strong>
+        <span class="text-secondary small">Records missing lat/lng or frequency are excluded</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Record</th>
+              <th>System</th>
+              <th>Output Freq</th>
+              <th>Status</th>
+              <th>Coverage Plot</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in records %}
+            <tr id="row-{{ r.id }}">
+              <td>
+                <a href="{{ url_for('records.detail', subdir=r.subdir) }}" target="_blank">{{ r.subdir }}</a>
+              </td>
+              <td class="text-secondary small">{{ r.system_id or '—' }}</td>
+              <td class="font-monospace small">{{ '%.4f' % r.freq_output }}</td>
+              <td><span class="badge bg-secondary">{{ r.status }}</span></td>
+              <td id="plotStatus-{{ r.id }}">
+                {% if r.error %}
+                  <span class="text-danger small" title="{{ r.error }}">
+                    <i class="bi bi-x-circle-fill"></i> Error
+                  </span>
+                {% elif r.generated_at %}
+                  <span class="text-success small">
+                    <i class="bi bi-check-circle-fill"></i> {{ r.generated_at | date }}
+                  </span>
+                {% else %}
+                  <span class="text-secondary small">—</span>
+                {% endif %}
+              </td>
+              <td class="text-end" id="plotActions-{{ r.id }}">
+                {% if r.generated_at and not r.error %}
+                <a href="{{ url_for('admin.coverage_download', record_id=r.id) }}"
+                   class="btn btn-sm btn-outline-success me-1" title="Download KMZ">
+                  <i class="bi bi-download"></i> KMZ
+                </a>
+                {% endif %}
+                <button class="btn btn-sm btn-outline-secondary"
+                        title="Generate / regenerate plot"
+                        onclick="generateOne({{ r.id }}, this)">
+                  <i class="bi bi-arrow-repeat"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF = '{{ csrf_token() }}';
+
+{% if batch.running %}
+document.getElementById('batchProgress').classList.remove('d-none');
+pollBatch();
+{% endif %}
+
+function startBatch() {
+  const n = parseInt(document.getElementById('batchSize').value) || 10;
+  document.getElementById('batchBtn').disabled = true;
+  document.getElementById('batchMsg').textContent = '';
+
+  fetch('{{ url_for("admin.coverage_batch") }}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({count: n}),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      document.getElementById('batchProgress').classList.remove('d-none');
+      pollBatch();
+    } else {
+      document.getElementById('batchMsg').textContent = d.message;
+      document.getElementById('batchBtn').disabled = false;
+    }
+  })
+  .catch(() => {
+    document.getElementById('batchMsg').textContent = 'Request failed';
+    document.getElementById('batchBtn').disabled = false;
+  });
+}
+
+let _pollTimer = null;
+function pollBatch() {
+  if (_pollTimer) clearTimeout(_pollTimer);
+  fetch('{{ url_for("admin.coverage_status") }}')
+    .then(r => r.json())
+    .then(d => {
+      const pct = d.total ? Math.round(d.done / d.total * 100) : 0;
+      document.getElementById('progressBar').style.width = pct + '%';
+      if (d.running) {
+        document.getElementById('progressText').textContent =
+          `Processing ${d.current || '…'} — ${d.done} of ${d.total} done, ${d.errors} errors`;
+        _pollTimer = setTimeout(pollBatch, 2000);
+      } else {
+        document.getElementById('progressText').textContent =
+          `Batch complete — ${d.done} generated, ${d.errors} errors`;
+        document.getElementById('batchBtn').disabled = false;
+        if (d.done > 0 || d.errors > 0) setTimeout(() => location.reload(), 1000);
+      }
+    });
+}
+
+function generateOne(recordId, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+  fetch(`/admin/coverage/generate/${recordId}`, {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF},
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      location.reload();
+    } else {
+      document.getElementById('plotStatus-' + recordId).innerHTML =
+        `<span class="text-danger small" title="${d.message}"><i class="bi bi-x-circle-fill"></i> Error</span>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+    }
+  })
+  .catch(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+  });
+}
+</script>
+{% endblock %}

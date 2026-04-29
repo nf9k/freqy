@@ -20,6 +20,7 @@
    - [Record Management](#record-management)
    - [Review Changes](#review-changes)
    - [Coordination/NOPC Check](#coordinationnopc-check)
+   - [Coverage Plots](#coverage-plots)
    - [DB Export](#db-export)
    - [FCC Callsign Lookup](#fcc-callsign-lookup)
 11. [Application Statuses](#application-statuses)
@@ -60,6 +61,7 @@ freqy is a web-based frequency coordination management system for amateur radio 
 | Coordination/NOPC check | — | Yes |
 | Pair finder | — | Yes |
 | Distance calculator | — | Yes |
+| Coverage plots (KMZ) | — | Yes |
 | Send NOPC | — | Yes |
 | Activity report | — | Yes |
 | Status changes | — | Yes |
@@ -452,6 +454,26 @@ Each row shows the candidate output/input frequencies, the nearest existing reco
 The result shows the distance in both miles and kilometers. A dashed green line connects the two points on the map. Click the map again to reset and start over.
 
 This is useful when evaluating repeater move requests or checking separation distances by hand.
+
+---
+
+### Coverage Plots
+
+`Admin → Tools → Coverage Plots` generates KMZ signal coverage overlays for eligible records using an external Signal Server instance.
+
+**Prerequisites:** The `SIGNAL_SERVER_URL` environment variable must point to a running Signal Server wrapper (default: `http://signal-server:5001`). Generated KMZ files are stored in the directory set by `KMZ_DIR` (default: `/data/kmz`), which is mounted as a Docker volume.
+
+**Page layout:**
+
+- **Stats row** — counts of eligible records, records with plots, failures, and pending records
+- **Batch Generation** — enter how many pending records to process, then click **Generate**. A progress bar shows the current record and running totals. The page reloads automatically when the batch completes.
+- **Records table** — one row per eligible record (those with TX coordinates and output frequency). Each row shows the plot status (date generated, error, or pending) and two action buttons:
+  - Download KMZ — saves the `.kmz` file locally for import into Google Earth or similar
+  - Regenerate — triggers a fresh plot for that record, replacing any existing result
+
+**ERP calculation:** Effective radiated power is computed from TX power (W), antenna gain (dBd), and feedline loss (dB). If TX power is not set, 10 W is assumed.
+
+Records missing TX latitude/longitude or output frequency are excluded from the table.
 
 ---
 

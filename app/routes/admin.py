@@ -2,10 +2,13 @@ import csv
 import io
 import json
 import math
+import os
+import threading
 import xml.etree.ElementTree as ET
 from datetime import date, datetime
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, current_app, Response
+import requests as _http
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, send_from_directory, url_for, current_app, Response
 from flask_login import current_user
 from flask_mail import Message
 
@@ -13,6 +16,10 @@ from .. import mail
 from ..auth import admin_required, create_reset_token, hash_password
 from ..constants import STATUSES, APP_TYPES, BANDS, BAND_LABELS, REGIONS, CTCSS_TONES, DCS_CODES, DMR_COLOR_CODES, P25_NACS, WILLBE_OPTIONS, BAND_CHANNELS
 from ..db import dict_cursor, get_db
+
+# ── Coverage plot batch state (module-level, lives for process lifetime) ──────
+_batch_state = {'running': False, 'total': 0, 'done': 0, 'errors': 0, 'current': None}
+_batch_lock  = threading.Lock()
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -1168,3 +1175,195 @@ def activity_mark():
 
     flash(f'Record {subdir} marked as confirmed.', 'success')
     return redirect(url_for('admin.activity_report'))
+
+
+# ── Coverage plots ─────────────────────────────────────────────────────────────
+
+def _erp_watts(tx_power, ant_gain, fdl_loss):
+    """Compute ERP in watts from TX power (W), antenna gain (dBd), feedline loss (dB)."""
+    if not tx_power:
+        return 10.0
+    net_db = float(ant_gain or 0) - float(fdl_loss or 0)
+    return round(float(tx_power) * (10 ** (net_db / 10)), 2)
+
+
+def _save_coverage_result(app, record_id, error=None):
+    with app.app_context():
+        conn = get_db()
+        cur  = dict_cursor(conn)
+        cur.execute("""
+            INSERT INTO coverage_plots (record_id, generated_at, error)
+            VALUES (%s, NOW(), %s)
+            ON DUPLICATE KEY UPDATE generated_at = NOW(), error = %s
+        """, (record_id, error, error))
+        conn.commit()
+        conn.close()
+
+
+def _do_generate(app, rec):
+    """Call Signal Server wrapper and write KMZ to KMZ_DIR. Returns (True, None) or (False, err)."""
+    signal_url = app.config['SIGNAL_SERVER_URL']
+    kmz_dir    = app.config['KMZ_DIR']
+    os.makedirs(kmz_dir, exist_ok=True)
+
+    erp = _erp_watts(rec.get('tx_power'), rec.get('ant_gain'), rec.get('fdl_loss'))
+    payload = {
+        'lat':  float(rec['loc_lat']),
+        'lon':  float(rec['loc_lng']),
+        'txh':  float(rec['ant_ahag'] or 30),
+        'freq': float(rec['freq_output']),
+        'erp':  erp,
+        'name': f"{rec['subdir']} — {float(rec['freq_output']):.4f} MHz",
+    }
+
+    try:
+        resp = _http.post(f'{signal_url}/coverage', json=payload, timeout=360)
+        if not resp.ok:
+            try:
+                msg = resp.json().get('error', resp.text)[:200]
+            except Exception:
+                msg = resp.text[:200]
+            _save_coverage_result(app, rec['id'], error=msg)
+            return False, msg
+
+        kmz_path = os.path.join(kmz_dir, f"{rec['id']}.kmz")
+        with open(kmz_path, 'wb') as f:
+            f.write(resp.content)
+        _save_coverage_result(app, rec['id'])
+        return True, None
+
+    except Exception as e:
+        msg = str(e)[:200]
+        _save_coverage_result(app, rec['id'], error=msg)
+        return False, msg
+
+
+def _batch_worker(app, records):
+    with _batch_lock:
+        _batch_state.update(running=True, total=len(records), done=0, errors=0, current=None)
+
+    for rec in records:
+        with _batch_lock:
+            _batch_state['current'] = rec['subdir']
+
+        ok, _ = _do_generate(app, rec)
+
+        with _batch_lock:
+            if ok:
+                _batch_state['done'] += 1
+            else:
+                _batch_state['errors'] += 1
+
+    with _batch_lock:
+        _batch_state.update(running=False, current=None)
+
+
+@bp.route('/coverage')
+@admin_required
+def coverage_plots():
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute("""
+        SELECT cr.id, cr.subdir, cr.subdsc, cr.system_id,
+               cr.freq_output, cr.loc_lat, cr.loc_lng, cr.status,
+               cp.generated_at, cp.error
+        FROM coordination_records cr
+        LEFT JOIN coverage_plots cp ON cp.record_id = cr.id
+        WHERE cr.loc_lat IS NOT NULL AND cr.loc_lng IS NOT NULL
+          AND cr.freq_output IS NOT NULL
+        ORDER BY cp.generated_at IS NULL DESC, cr.subdir
+    """)
+    records = cur.fetchall()
+    conn.close()
+
+    pending_count = sum(1 for r in records if not r['generated_at'])
+
+    with _batch_lock:
+        batch = dict(_batch_state)
+
+    return render_template('admin/coverage.html', records=records,
+                           pending_count=pending_count, batch=batch)
+
+
+@bp.route('/coverage/status')
+@admin_required
+def coverage_status():
+    with _batch_lock:
+        return jsonify(dict(_batch_state))
+
+
+@bp.route('/coverage/generate/<int:record_id>', methods=['POST'])
+@admin_required
+def coverage_generate(record_id):
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute("""
+        SELECT id, subdir, freq_output, loc_lat, loc_lng,
+               ant_ahag, tx_power, ant_gain, fdl_loss
+        FROM coordination_records
+        WHERE id = %s AND loc_lat IS NOT NULL AND loc_lng IS NOT NULL
+          AND freq_output IS NOT NULL
+    """, (record_id,))
+    rec = cur.fetchone()
+    conn.close()
+
+    if not rec:
+        return jsonify({'success': False, 'message': 'Record not found or missing coordinates/frequency'}), 404
+
+    ok, err = _do_generate(current_app._get_current_object(), rec)
+    if ok:
+        return jsonify({'success': True, 'message': 'Coverage plot generated'})
+    return jsonify({'success': False, 'message': err or 'Unknown error'}), 500
+
+
+@bp.route('/coverage/batch', methods=['POST'])
+@admin_required
+def coverage_batch():
+    with _batch_lock:
+        if _batch_state['running']:
+            return jsonify({'success': False, 'message': 'A batch is already running'}), 409
+
+    data  = request.get_json(silent=True) or {}
+    count = max(1, min(int(data.get('count', 10)), 200))
+
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute("""
+        SELECT cr.id, cr.subdir, cr.freq_output, cr.loc_lat, cr.loc_lng,
+               cr.ant_ahag, cr.tx_power, cr.ant_gain, cr.fdl_loss
+        FROM coordination_records cr
+        LEFT JOIN coverage_plots cp ON cp.record_id = cr.id AND cp.error IS NULL
+        WHERE cr.loc_lat IS NOT NULL AND cr.loc_lng IS NOT NULL
+          AND cr.freq_output IS NOT NULL
+          AND cp.id IS NULL
+        ORDER BY cr.subdir
+        LIMIT %s
+    """, (count,))
+    records = cur.fetchall()
+    conn.close()
+
+    if not records:
+        return jsonify({'success': False, 'message': 'No records pending coverage plots'})
+
+    app = current_app._get_current_object()
+    threading.Thread(target=_batch_worker, args=(app, records), daemon=True).start()
+    return jsonify({'success': True, 'message': f'Started batch of {len(records)}'})
+
+
+@bp.route('/coverage/download/<int:record_id>')
+@admin_required
+def coverage_download(record_id):
+    kmz_dir  = current_app.config['KMZ_DIR']
+    filename = f'{record_id}.kmz'
+    if not os.path.exists(os.path.join(kmz_dir, filename)):
+        abort(404)
+
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('SELECT subdir FROM coordination_records WHERE id = %s', (record_id,))
+    rec = cur.fetchone()
+    conn.close()
+
+    download_name = f"{rec['subdir']}_coverage.kmz" if rec else filename
+    return send_from_directory(kmz_dir, filename, as_attachment=True,
+                               download_name=download_name)

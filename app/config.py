@@ -52,6 +52,9 @@ class Config:
     DEMO_MODE         = os.getenv('DEMO_MODE', 'false').lower() == 'true'
     DEMO_RESET_TOKEN  = os.getenv('DEMO_RESET_TOKEN', '')
 
+    SIGNAL_SERVER_URL = os.getenv('SIGNAL_SERVER_URL', 'http://signal-server:5001')
+    KMZ_DIR           = os.getenv('KMZ_DIR', '/data/kmz')
+
     FREQ_CO_CHANNEL_MILES = json.loads(os.getenv('FREQ_CO_CHANNEL_MILES', json.dumps({
         '50':   120,
         '144':  120,
