@@ -3,6 +3,7 @@ import io
 import json
 import math
 import os
+import time
 import threading
 import xml.etree.ElementTree as ET
 from datetime import date, datetime
@@ -17,9 +18,7 @@ from ..auth import admin_required, create_reset_token, hash_password
 from ..constants import STATUSES, APP_TYPES, BANDS, BAND_LABELS, REGIONS, CTCSS_TONES, DCS_CODES, DMR_COLOR_CODES, P25_NACS, WILLBE_OPTIONS, BAND_CHANNELS
 from ..db import dict_cursor, get_db
 
-# ── Coverage plot batch state (module-level, lives for process lifetime) ──────
-_batch_state = {'running': False, 'total': 0, 'done': 0, 'errors': 0, 'current': None}
-_batch_lock  = threading.Lock()
+_batch_lock = threading.Lock()  # guards only single-process double-starts within one worker
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -1187,15 +1186,38 @@ def _erp_watts(tx_power, ant_gain, fdl_loss):
     return round(float(tx_power) * (10 ** (net_db / 10)), 2)
 
 
-def _save_coverage_result(app, record_id, error=None):
+def _batch_db_get(app):
+    with app.app_context():
+        conn = get_db()
+        cur  = dict_cursor(conn)
+        cur.execute('SELECT * FROM coverage_batch WHERE id = 1')
+        row = cur.fetchone()
+        conn.close()
+    return row or {'running': 0, 'total': 0, 'done': 0, 'errors': 0,
+                   'current_subdir': None, 'started_at': None, 'finished_at': None}
+
+
+def _batch_db_update(app, **kwargs):
+    with app.app_context():
+        conn = get_db()
+        sets = ', '.join(f'{k} = %s' for k in kwargs)
+        conn.cursor().execute(
+            f'UPDATE coverage_batch SET {sets} WHERE id = 1',
+            list(kwargs.values()),
+        )
+        conn.commit()
+        conn.close()
+
+
+def _save_coverage_result(app, record_id, error=None, duration_secs=None):
     with app.app_context():
         conn = get_db()
         cur  = dict_cursor(conn)
         cur.execute("""
-            INSERT INTO coverage_plots (record_id, generated_at, error)
-            VALUES (%s, NOW(), %s)
-            ON DUPLICATE KEY UPDATE generated_at = NOW(), error = %s
-        """, (record_id, error, error))
+            INSERT INTO coverage_plots (record_id, generated_at, error, duration_secs)
+            VALUES (%s, NOW(), %s, %s)
+            ON DUPLICATE KEY UPDATE generated_at = NOW(), error = %s, duration_secs = %s
+        """, (record_id, error, duration_secs, error, duration_secs))
         conn.commit()
         conn.close()
 
@@ -1216,46 +1238,46 @@ def _do_generate(app, rec):
         'name': f"{rec['subdir']} — {float(rec['freq_output']):.4f} MHz",
     }
 
+    t0 = time.monotonic()
     try:
         resp = _http.post(f'{signal_url}/coverage', json=payload, timeout=900)
+        elapsed = int(time.monotonic() - t0)
         if not resp.ok:
             try:
                 msg = resp.json().get('error', resp.text)[:200]
             except Exception:
                 msg = resp.text[:200]
-            _save_coverage_result(app, rec['id'], error=msg)
+            _save_coverage_result(app, rec['id'], error=msg, duration_secs=elapsed)
             return False, msg
 
         kmz_path = os.path.join(kmz_dir, f"{rec['id']}.kmz")
         with open(kmz_path, 'wb') as f:
             f.write(resp.content)
-        _save_coverage_result(app, rec['id'])
+        _save_coverage_result(app, rec['id'], duration_secs=elapsed)
         return True, None
 
     except Exception as e:
+        elapsed = int(time.monotonic() - t0)
         msg = str(e)[:200]
-        _save_coverage_result(app, rec['id'], error=msg)
+        _save_coverage_result(app, rec['id'], error=msg, duration_secs=elapsed)
         return False, msg
 
 
 def _batch_worker(app, records):
-    with _batch_lock:
-        _batch_state.update(running=True, total=len(records), done=0, errors=0, current=None)
+    _batch_db_update(app, running=1, total=len(records), done=0, errors=0,
+                     current_subdir=None, started_at=datetime.utcnow(), finished_at=None)
 
+    done = errors = 0
     for rec in records:
-        with _batch_lock:
-            _batch_state['current'] = rec['subdir']
-
+        _batch_db_update(app, current_subdir=rec['subdir'])
         ok, _ = _do_generate(app, rec)
+        if ok:
+            done += 1
+        else:
+            errors += 1
+        _batch_db_update(app, done=done, errors=errors)
 
-        with _batch_lock:
-            if ok:
-                _batch_state['done'] += 1
-            else:
-                _batch_state['errors'] += 1
-
-    with _batch_lock:
-        _batch_state.update(running=False, current=None)
+    _batch_db_update(app, running=0, current_subdir=None, finished_at=datetime.utcnow())
 
 
 @bp.route('/coverage')
@@ -1266,7 +1288,7 @@ def coverage_plots():
     cur.execute("""
         SELECT cr.id, cr.subdir, cr.subdsc, cr.system_id,
                cr.freq_output, cr.loc_lat, cr.loc_lng, cr.status,
-               cp.generated_at, cp.error
+               cp.generated_at, cp.error, cp.duration_secs
         FROM coordination_records cr
         LEFT JOIN coverage_plots cp ON cp.record_id = cr.id
         WHERE cr.loc_lat IS NOT NULL AND cr.loc_lng IS NOT NULL
@@ -1284,8 +1306,7 @@ def coverage_plots():
 
     pending_count = sum(1 for r in records if not r['generated_at'])
 
-    with _batch_lock:
-        batch = dict(_batch_state)
+    batch = _batch_db_get(current_app._get_current_object())
 
     return render_template('admin/coverage.html', records=records,
                            pending_count=pending_count, batch=batch)
@@ -1294,8 +1315,14 @@ def coverage_plots():
 @bp.route('/coverage/status')
 @admin_required
 def coverage_status():
-    with _batch_lock:
-        return jsonify(dict(_batch_state))
+    s = _batch_db_get(current_app._get_current_object())
+    return jsonify({
+        'running':  bool(s['running']),
+        'total':    s['total'],
+        'done':     s['done'],
+        'errors':   s['errors'],
+        'current':  s['current_subdir'],
+    })
 
 
 @bp.route('/coverage/generate/<int:record_id>', methods=['POST'])
@@ -1341,8 +1368,9 @@ def coverage_record_status(record_id):
 @bp.route('/coverage/batch', methods=['POST'])
 @admin_required
 def coverage_batch():
+    app = current_app._get_current_object()
     with _batch_lock:
-        if _batch_state['running']:
+        if _batch_db_get(app)['running']:
             return jsonify({'success': False, 'message': 'A batch is already running'}), 409
 
     data  = request.get_json(silent=True) or {}
@@ -1367,7 +1395,6 @@ def coverage_batch():
     if not records:
         return jsonify({'success': False, 'message': 'No records pending coverage plots'})
 
-    app = current_app._get_current_object()
     threading.Thread(target=_batch_worker, args=(app, records), daemon=True).start()
     return jsonify({'success': True, 'message': f'Started batch of {len(records)}'})
 

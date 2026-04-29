@@ -12,6 +12,8 @@
     {# ── Stats ── #}
     {% set plot_count  = records | selectattr('generated_at') | selectattr('error', 'none') | list | length %}
     {% set error_count = records | selectattr('error') | list | length %}
+    {% set timed = records | selectattr('duration_secs') | list %}
+    {% set avg_secs = (timed | sum(attribute='duration_secs') / timed | length) | int if timed else 0 %}
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-3">
         <div class="card text-center">
@@ -45,6 +47,16 @@
           </div>
         </div>
       </div>
+      {% if avg_secs %}
+      <div class="col-6 col-md-3">
+        <div class="card text-center">
+          <div class="card-body py-2">
+            <div class="fs-4 fw-bold">{{ avg_secs }}s</div>
+            <div class="text-secondary small">Avg Plot Time</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     {# ── Batch controls ── #}
@@ -104,10 +116,12 @@
                 {% if r.error %}
                   <span class="text-danger small" title="{{ r.error }}">
                     <i class="bi bi-x-circle-fill"></i> Error
+                    {% if r.duration_secs %}<span class="text-secondary">({{ r.duration_secs }}s)</span>{% endif %}
                   </span>
                 {% elif r.generated_at %}
                   <span class="text-success small">
                     <i class="bi bi-check-circle-fill"></i> {{ r.generated_at | date }}
+                    {% if r.duration_secs %}<span class="text-secondary">({{ r.duration_secs }}s)</span>{% endif %}
                   </span>
                 {% else %}
                   <span class="text-secondary small">—</span>
