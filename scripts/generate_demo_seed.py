@@ -47,26 +47,24 @@ LASTS = [
 ]
 
 CITIES = [
-    ('Chicago','IL',41.88,-87.63),      ('Houston','TX',29.76,-95.37),
-    ('Phoenix','AZ',33.45,-112.07),     ('Philadelphia','PA',39.95,-75.17),
-    ('San Antonio','TX',29.42,-98.49),  ('San Diego','CA',32.72,-117.16),
-    ('Dallas','TX',32.79,-96.80),       ('San Jose','CA',37.34,-121.89),
-    ('Austin','TX',30.27,-97.74),       ('Jacksonville','FL',30.33,-81.66),
-    ('Columbus','OH',39.96,-82.99),     ('Charlotte','NC',35.23,-80.84),
-    ('Indianapolis','IN',39.77,-86.16), ('Seattle','WA',47.61,-122.33),
-    ('Denver','CO',39.74,-104.98),      ('Nashville','TN',36.17,-86.78),
-    ('Oklahoma City','OK',35.47,-97.52),('Louisville','KY',38.25,-85.76),
-    ('Portland','OR',45.52,-122.68),    ('Las Vegas','NV',36.17,-115.14),
-    ('Memphis','TN',35.15,-90.05),      ('Baltimore','MD',39.29,-76.61),
-    ('Milwaukee','WI',43.04,-87.91),    ('Albuquerque','NM',35.08,-106.65),
-    ('Tucson','AZ',32.22,-110.97),      ('Fresno','CA',36.75,-119.77),
-    ('Sacramento','CA',38.58,-121.49),  ('Kansas City','MO',39.10,-94.58),
-    ('Atlanta','GA',33.75,-84.39),      ('Minneapolis','MN',44.98,-93.27),
-    ('Cleveland','OH',41.50,-81.69),    ('Wichita','KS',37.69,-97.34),
-    ('Tampa','FL',27.95,-82.46),        ('St. Louis','MO',38.63,-90.20),
-    ('Raleigh','NC',35.78,-78.64),      ('Omaha','NE',41.26,-95.94),
-    ('Colorado Springs','CO',38.83,-104.82), ('Arlington','TX',32.74,-97.11),
-    ('New Orleans','LA',29.95,-90.07),  ('Boise','ID',43.61,-116.20),
+    ('Indianapolis','IN',39.77,-86.16), ('Fort Wayne','IN',41.08,-85.14),
+    ('Evansville','IN',37.97,-87.57),   ('South Bend','IN',41.68,-86.25),
+    ('Carmel','IN',39.98,-86.12),       ('Fishers','IN',39.96,-85.97),
+    ('Bloomington','IN',39.17,-86.53),  ('Hammond','IN',41.58,-87.50),
+    ('Gary','IN',41.59,-87.35),         ('Muncie','IN',40.19,-85.39),
+    ('Lafayette','IN',40.42,-86.88),    ('Terre Haute','IN',39.47,-87.41),
+    ('Columbus','IN',39.20,-85.92),     ('Anderson','IN',40.11,-85.68),
+    ('Kokomo','IN',40.49,-86.13),       ('Noblesville','IN',40.04,-86.01),
+    ('Greenwood','IN',39.61,-86.11),    ('Elkhart','IN',41.68,-85.98),
+    ('Mishawaka','IN',41.66,-86.16),    ('Lawrence','IN',39.84,-86.02),
+    ('Jeffersonville','IN',38.28,-85.74),('New Albany','IN',38.29,-85.82),
+    ('Portage','IN',41.58,-87.18),      ('Richmond','IN',39.83,-84.90),
+    ('Madison','IN',38.74,-85.38),      ('Vincennes','IN',38.68,-87.53),
+    ('Logansport','IN',40.75,-86.36),   ('Michigan City','IN',41.71,-86.90),
+    ('Peru','IN',40.75,-86.07),         ('Jasper','IN',38.39,-86.93),
+    ('New Castle','IN',39.93,-85.37),   ('Frankfort','IN',40.28,-86.51),
+    ('Marion','IN',40.56,-85.66),       ('Connersville','IN',39.64,-85.14),
+    ('Valparaiso','IN',41.47,-87.06),
 ]
 
 STREETS = [
@@ -225,7 +223,7 @@ def make_record(rec_id, user_id, system_id, city, state, lat, lng, status=None):
     }
 
 # 5 records for the demo user account
-user_city, user_state, user_lat, user_lng = CITIES[0]  # Chicago
+user_city, user_state, user_lat, user_lng = CITIES[0]  # Indianapolis
 for i, forced_status in enumerate(['New', 'Construction Permit', 'Final', 'Final', 'On Hold']):
     records.append(make_record(i+1, 2, 'USER', user_city, user_state, user_lat, user_lng, forced_status))
 
