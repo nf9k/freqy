@@ -1264,9 +1264,6 @@ def _do_generate(app, rec):
 
 
 def _batch_worker(app, records):
-    _batch_db_update(app, running=1, total=len(records), done=0, errors=0,
-                     current_subdir=None, started_at=datetime.utcnow(), finished_at=None)
-
     done = errors = 0
     for rec in records:
         _batch_db_update(app, current_subdir=rec['subdir'])
@@ -1395,6 +1392,8 @@ def coverage_batch():
     if not records:
         return jsonify({'success': False, 'message': 'No records pending coverage plots'})
 
+    _batch_db_update(app, running=1, total=len(records), done=0, errors=0,
+                     current_subdir=None, started_at=datetime.utcnow(), finished_at=None)
     threading.Thread(target=_batch_worker, args=(app, records), daemon=True).start()
     return jsonify({'success': True, 'message': f'Started batch of {len(records)}'})
 
