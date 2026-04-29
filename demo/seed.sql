@@ -5,12 +5,16 @@
 SET FOREIGN_KEY_CHECKS=0;
 TRUNCATE TABLE record_changelog;
 TRUNCATE TABLE expiration_notices;
+TRUNCATE TABLE coverage_plots;
+TRUNCATE TABLE coverage_batch;
 TRUNCATE TABLE coordination_records;
 TRUNCATE TABLE password_reset_tokens;
 TRUNCATE TABLE totp_backup_codes;
 TRUNCATE TABLE webauthn_credentials;
 TRUNCATE TABLE users;
 SET FOREIGN_KEY_CHECKS=1;
+
+INSERT IGNORE INTO coverage_batch (id) VALUES (1);
 
 -- ── Users ──────────────────────────────────────────────────
 INSERT INTO users (id,callsign,password_hash,email,fname,lname,is_admin,created_at,updated_at) VALUES

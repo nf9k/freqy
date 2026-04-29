@@ -461,15 +461,25 @@ This is useful when evaluating repeater move requests or checking separation dis
 
 `Admin → Tools → Coverage Plots` generates KMZ signal coverage overlays for eligible records using an external Signal Server instance.
 
-**Prerequisites:** The `SIGNAL_SERVER_URL` environment variable must point to a running Signal Server wrapper (default: `http://signal-server:5001`). Generated KMZ files are stored in the directory set by `KMZ_DIR` (default: `/data/kmz`), which is mounted as a Docker volume.
+**Prerequisites:** The `SIGNAL_SERVER_URL` environment variable must point to a running signal-wrapper API. Generated KMZ files are stored in the directory set by `KMZ_DIR` (default: `/data/kmz`), which should be mounted as a persistent Docker volume. See `signal-wrapper/INSTALL.md` for server setup.
+
+**Three-plot methodology:** Each record produces a single layered KMZ containing three overlays:
+
+| Plot | Color | Reliability | Threshold (VHF / UHF) |
+|------|-------|-------------|----------------------|
+| Service | Blue | 50% | 37 / 39 dBuV/m |
+| Interference | Green | 10% | 19 / 21 dBuV/m |
+| Adjacent | Magenta | 10% | 43 / 41 dBuV/m |
+
+VHF = ≤300 MHz; UHF = >300 MHz. The KMZ opens in Google Earth with all three overlays pre-loaded and individually toggleable.
 
 **Page layout:**
 
-- **Stats row** — counts of eligible records, records with plots, failures, and pending records
-- **Batch Generation** — enter how many pending records to process, then click **Generate**. A progress bar shows the current record and running totals. The page reloads automatically when the batch completes.
-- **Records table** — one row per eligible record (those with TX coordinates and output frequency). Each row shows the plot status (date generated, error, or pending) and two action buttons:
-  - Download KMZ — saves the `.kmz` file locally for import into Google Earth or similar
-  - Regenerate — triggers a fresh plot for that record, replacing any existing result
+- **Stats row** — counts of eligible records, records with plots, failures, pending, and average plot generation time (once data is available)
+- **Batch Generation** — enter how many pending records to process, then click **Generate**. A progress bar tracks the current record and running totals; the page reloads automatically when the batch completes.
+- **Records table** — one row per eligible record (those with TX coordinates and output frequency). Each row shows the plot status (date generated with runtime in seconds, error, or pending) and two action buttons:
+  - **Download KMZ** — saves the `.kmz` file locally for import into Google Earth or similar
+  - **Regenerate** — triggers a fresh plot for that record, replacing any existing result
 
 **ERP calculation:** Effective radiated power is computed from TX power (W), antenna gain (dBd), and feedline loss (dB). If TX power is not set, 10 W is assumed.
 
