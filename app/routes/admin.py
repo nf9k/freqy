@@ -1276,6 +1276,12 @@ def coverage_plots():
     records = cur.fetchall()
     conn.close()
 
+    kmz_dir = current_app.config.get('KMZ_DIR', '/data/kmz')
+    for r in records:
+        if r['generated_at'] and not r['error']:
+            if not os.path.exists(os.path.join(kmz_dir, f"{r['id']}.kmz")):
+                r['generated_at'] = None
+
     pending_count = sum(1 for r in records if not r['generated_at'])
 
     with _batch_lock:
