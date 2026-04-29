@@ -71,7 +71,7 @@ After=network.target
 User=nobody
 WorkingDirectory=/opt/signal-wrapper
 EnvironmentFile=/opt/signal-wrapper/.env
-ExecStart=/opt/signal-wrapper/venv/bin/gunicorn -w 2 -b 0.0.0.0:5001 app:app
+ExecStart=/opt/signal-wrapper/venv/bin/gunicorn -w 2 --timeout 600 -b 0.0.0.0:5001 app:app
 Restart=on-failure
 
 [Install]

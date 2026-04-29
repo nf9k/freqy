@@ -1217,7 +1217,7 @@ def _do_generate(app, rec):
     }
 
     try:
-        resp = _http.post(f'{signal_url}/coverage', json=payload, timeout=360)
+        resp = _http.post(f'{signal_url}/coverage', json=payload, timeout=900)
         if not resp.ok:
             try:
                 msg = resp.json().get('error', resp.text)[:200]
