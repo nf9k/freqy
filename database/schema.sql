@@ -257,6 +257,12 @@ CREATE TABLE IF NOT EXISTS coverage_batch (
 
 INSERT IGNORE INTO coverage_batch (id) VALUES (1);
 
+CREATE TABLE IF NOT EXISTS coverage_queue (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    record_id  INT NOT NULL,
+    added_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- -------------------------------------------------------
 -- Changelog (one row per change event, mirrors changelog.txt)
 -- -------------------------------------------------------

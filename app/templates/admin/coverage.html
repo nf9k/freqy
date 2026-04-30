@@ -229,16 +229,17 @@ function pollBatch() {
       document.getElementById('progressBar').style.width = pct + '%';
 
       if (d.running) {
-        const remaining  = d.total - d.done - d.errors;
-        const inQueue    = Math.max(0, remaining - 1);
-        const etaSecs    = AVG_SECS ? remaining * AVG_SECS : null;
-        const etaStr     = etaSecs ? ` · ${fmtEta(etaSecs)} remaining` : '';
+        const remaining   = d.total - d.done - d.errors;
+        const notStarted  = Math.max(0, remaining - 1) + (d.queue || 0);
+        const allPending  = remaining + (d.queue || 0);
+        const etaSecs     = AVG_SECS ? allPending * AVG_SECS : null;
+        const etaStr      = etaSecs ? ` · ${fmtEta(etaSecs)} remaining` : '';
 
         document.getElementById('progressText').textContent =
           `Processing ${d.current || '…'} — ${d.done} of ${d.total} done, ${d.errors} errors`;
         document.getElementById('progressQueue').textContent =
-          inQueue > 0
-            ? `${inQueue} in queue${etaStr}`
+          notStarted > 0
+            ? `${notStarted} in queue${etaStr}`
             : (etaSecs ? `In progress${etaStr}` : 'In progress');
 
         _pollTimer = setTimeout(pollBatch, 2000);
@@ -265,7 +266,12 @@ function generateOne(recordId, btn) {
   .then(d => {
     if (d.success) {
       document.getElementById('batchProgress').classList.remove('d-none');
-      pollBatch();
+      if (d.queued) {
+        btn.innerHTML = '<i class="bi bi-clock-history" title="Queued"></i>';
+        if (!_pollTimer) pollBatch();
+      } else {
+        pollBatch();
+      }
     } else {
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>';

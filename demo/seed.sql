@@ -7,6 +7,7 @@ TRUNCATE TABLE record_changelog;
 TRUNCATE TABLE expiration_notices;
 TRUNCATE TABLE coverage_plots;
 TRUNCATE TABLE coverage_batch;
+TRUNCATE TABLE coverage_queue;
 TRUNCATE TABLE coordination_records;
 TRUNCATE TABLE password_reset_tokens;
 TRUNCATE TABLE totp_backup_codes;

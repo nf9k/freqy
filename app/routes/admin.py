@@ -1263,9 +1263,55 @@ def _do_generate(app, rec):
         return False, msg
 
 
+def _queue_add(app, record_id):
+    with app.app_context():
+        conn = get_db()
+        cur  = dict_cursor(conn)
+        cur.execute('INSERT INTO coverage_queue (record_id) VALUES (%s)', (record_id,))
+        cur.execute('UPDATE coverage_batch SET total = total + 1 WHERE id = 1')
+        conn.commit()
+        conn.close()
+
+
+def _queue_pop(app):
+    """Remove and return the oldest coverage_queue entry as a full record dict, or None."""
+    with app.app_context():
+        conn = get_db()
+        cur  = dict_cursor(conn)
+        cur.execute('SELECT id, record_id FROM coverage_queue ORDER BY added_at LIMIT 1')
+        row = cur.fetchone()
+        if not row:
+            conn.close()
+            return None
+        cur.execute('DELETE FROM coverage_queue WHERE id = %s', (row['id'],))
+        cur.execute("""
+            SELECT id, subdir, freq_output, loc_lat, loc_lng,
+                   ant_ahag, tx_power, ant_gain, fdl_loss
+            FROM coordination_records
+            WHERE id = %s AND loc_lat IS NOT NULL AND loc_lng IS NOT NULL
+              AND freq_output IS NOT NULL
+        """, (row['record_id'],))
+        rec = cur.fetchone()
+        conn.commit()
+        conn.close()
+    return rec
+
+
 def _batch_worker(app, records):
     done = errors = 0
     for rec in records:
+        _batch_db_update(app, current_subdir=rec['subdir'])
+        ok, _ = _do_generate(app, rec)
+        if ok:
+            done += 1
+        else:
+            errors += 1
+        _batch_db_update(app, done=done, errors=errors)
+
+    while True:
+        rec = _queue_pop(app)
+        if rec is None:
+            break
         _batch_db_update(app, current_subdir=rec['subdir'])
         ok, _ = _do_generate(app, rec)
         if ok:
@@ -1312,13 +1358,19 @@ def coverage_plots():
 @bp.route('/coverage/status')
 @admin_required
 def coverage_status():
-    s = _batch_db_get(current_app._get_current_object())
+    s    = _batch_db_get(current_app._get_current_object())
+    conn = get_db()
+    cur  = dict_cursor(conn)
+    cur.execute('SELECT COUNT(*) AS cnt FROM coverage_queue')
+    queued = cur.fetchone()['cnt']
+    conn.close()
     return jsonify({
         'running':  bool(s['running']),
         'total':    s['total'],
         'done':     s['done'],
         'errors':   s['errors'],
         'current':  s['current_subdir'],
+        'queue':    queued,
     })
 
 
@@ -1326,9 +1378,6 @@ def coverage_status():
 @admin_required
 def coverage_generate(record_id):
     app = current_app._get_current_object()
-    with _batch_lock:
-        if _batch_db_get(app)['running']:
-            return jsonify({'success': False, 'message': 'A batch is already running — wait for it to complete'}), 409
 
     conn = get_db()
     cur  = dict_cursor(conn)
@@ -1345,10 +1394,15 @@ def coverage_generate(record_id):
     if not rec:
         return jsonify({'success': False, 'message': 'Record not found or missing coordinates/frequency'}), 404
 
+    with _batch_lock:
+        if _batch_db_get(app)['running']:
+            _queue_add(app, record_id)
+            return jsonify({'success': True, 'queued': True})
+
     _batch_db_update(app, running=1, total=1, done=0, errors=0,
                      current_subdir=rec['subdir'], started_at=datetime.utcnow(), finished_at=None)
     threading.Thread(target=_batch_worker, args=(app, [rec]), daemon=True).start()
-    return jsonify({'success': True, 'queued': True})
+    return jsonify({'success': True, 'queued': False})
 
 
 
